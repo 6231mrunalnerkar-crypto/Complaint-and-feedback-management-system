@@ -1,0 +1,64 @@
+.hero{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:80px;
+
+}
+
+.heroLeft{
+
+    width:50%;
+
+}
+
+.heroLeft h1{
+
+    font-size:60px;
+    color:#1E293B;
+
+}
+
+.heroLeft p{
+
+    margin:30px 0;
+    line-height:30px;
+    color:#555;
+
+}
+
+.heroButtons{
+
+    display:flex;
+    gap:20px;
+
+}
+
+.primary{
+
+    padding:15px 30px;
+    border:none;
+    background:#2563EB;
+    color:white;
+    border-radius:10px;
+    cursor:pointer;
+
+}
+
+.secondary{
+
+    padding:15px 30px;
+    border:2px solid #2563EB;
+    background:white;
+    color:#2563EB;
+    border-radius:10px;
+    cursor:pointer;
+
+}
+
+.heroRight img{
+
+    width:500px;
+
+}

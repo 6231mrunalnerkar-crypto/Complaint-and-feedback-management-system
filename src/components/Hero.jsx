@@ -1,48 +1,38 @@
+import heroImage from "../assets/images/hero.png";
 import "../styles/Hero.css";
 
 function Hero() {
   return (
     <section className="hero">
 
-      <div className="heroLeft">
+      <div className="hero-left">
+
+        <div className="badge">
+          ⭐ Trusted by 5000+ Students
+        </div>
 
         <h1>
           Complaint &
-          Feedback
-          Management
-          System
+          <span> Feedback</span><br />
+          Management System
         </h1>
 
         <p>
-
-          Submit complaints,
-          track their status,
-          and provide valuable
-          feedback in one place.
-
+          A smart and secure platform where students can register complaints,
+          track their status, submit feedback, and communicate with the
+          administration efficiently.
         </p>
 
-        <div className="heroButtons">
+        <div className="hero-buttons">
+          <button className="primary-btn">Register Complaint</button>
 
-          <button className="primary">
-            Register Complaint
-          </button>
-
-          <button className="secondary">
-            Track Complaint
-          </button>
-
+          <button className="secondary-btn">Track Complaint</button>
         </div>
 
       </div>
 
-      <div className="heroRight">
-
-        <img
-        src="https://illustrations.popsy.co/blue/digital-nomad.svg"
-        alt="hero"
-        />
-
+      <div className="hero-right">
+        <img src={heroImage} alt="Hero" />
       </div>
 
     </section>

@@ -7,7 +7,7 @@ function Navbar() {
         CFMS
       </div>
 
-      <ul className="navLinks">
+      <ul className="nav-links">
         <li>Home</li>
         <li>About</li>
         <li>Contact</li>

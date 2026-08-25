@@ -1,95 +1,103 @@
-.howItWorks{
+.how-section {
+  padding: 100px 8%;
 
-    padding:90px 70px;
-    background:#F8FAFC;
-    text-align:center;
-
+  background: var(--background);
 }
 
-.howItWorks h2{
+.how-heading {
+  max-width: 650px;
 
-    font-size:38px;
-    color:#1E293B;
+  margin: 0 auto 55px;
 
+  text-align: center;
 }
 
-.workSubTitle{
+.how-heading > span {
+  color: var(--primary);
 
-    color:#64748B;
-    margin:20px auto 60px;
-    width:70%;
-    line-height:28px;
+  font-size: 11px;
 
+  font-weight: 700;
+
+  letter-spacing: 2px;
 }
 
-.steps{
+.how-heading h2 {
+  margin: 15px 0;
 
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    gap:15px;
-    flex-wrap:wrap;
+  color: var(--text);
 
+  font-size: 40px;
 }
 
-.step{
-
-    width:220px;
-    background:white;
-    padding:30px 20px;
-    border-radius:15px;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
-    transition:.3s;
-
+.how-heading h2 strong {
+  color: var(--primary);
 }
 
-.step:hover{
+.how-heading p {
+  color: var(--text-secondary);
 
-    transform:translateY(-8px);
+  font-size: 14px;
 
+  line-height: 1.7;
 }
 
-.circle{
+.steps-container {
+  max-width: 1100px;
 
-    width:70px;
-    height:70px;
-    background:#2563EB;
-    color:white;
-    border-radius:50%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:30px;
-    margin:auto;
-    margin-bottom:20px;
+  margin: 0 auto;
 
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 18px;
 }
 
-.step h3{
+.step-card {
+  padding: 28px;
 
-    color:#2563EB;
-    margin-bottom:10px;
+  background: var(--surface);
 
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
 }
 
-.step h4{
+.step-number {
+  color: var(--primary);
 
-    color:#1E293B;
-    margin-bottom:15px;
+  font-size: 12px;
 
+  font-weight: 700;
+
+  letter-spacing: 1px;
 }
 
-.step p{
+.step-card h3 {
+  margin: 20px 0 10px;
 
-    color:#64748B;
-    line-height:24px;
+  color: var(--text);
 
+  font-size: 18px;
 }
 
-.arrow{
+.step-card p {
+  color: var(--text-secondary);
 
-    font-size:35px;
-    color:#2563EB;
-    margin-top:90px;
+  font-size: 13px;
 
+  line-height: 1.7;
+}
+
+@media (max-width: 850px) {
+  .steps-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 550px) {
+  .steps-container {
+    grid-template-columns: 1fr;
+  }
 }

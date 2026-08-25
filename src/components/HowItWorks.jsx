@@ -1,102 +1,70 @@
-import {
-  FaEdit,
-  FaUserCheck,
-  FaTools,
-  FaCheckCircle
-} from "react-icons/fa";
-
 import "../styles/HowItWorks.css";
 
 function HowItWorks() {
+  const steps = [
+    {
+      number: "01",
+      title: "Submit",
+      text: "Describe your complaint, concern or suggestion and provide the relevant details."
+    },
+    {
+      number: "02",
+      title: "Receive your ID",
+      text: "Your submission receives a unique complaint ID that can be used for tracking."
+    },
+    {
+      number: "03",
+      title: "Review",
+      text: "The appropriate administrative team reviews the complaint and determines the next action."
+    },
+    {
+      number: "04",
+      title: "Resolution",
+      text: "The issue is addressed and the complaint status is updated throughout the process."
+    }
+  ];
 
   return (
+    <section className="how-section" id="how-it-works">
 
-    <section className="howItWorks">
+      <div className="how-heading">
+        <span>HOW IT WORKS</span>
 
-      <h2>How It Works</h2>
+        <h2>
+          From concern to
+          <strong> resolution.</strong>
+        </h2>
 
-      <p className="workSubTitle">
-        Follow these simple steps to register and resolve your complaint.
-      </p>
+        <p>
+          A simple process designed to make communication
+          between students and administration easier.
+        </p>
+      </div>
 
-      <div className="steps">
+      <div className="steps-container">
 
-        <div className="step">
+        {steps.map((step) => (
+          <div className="step-card" key={step.number}>
 
-          <div className="circle">
-            <FaEdit />
+            <span className="step-number">
+              {step.number}
+            </span>
+
+            <h3>
+              {step.title}
+            </h3>
+
+            <p>
+              {step.text}
+            </p>
+
           </div>
-
-          <h3>Step 1</h3>
-
-          <h4>Submit Complaint</h4>
-
-          <p>
-            Student or guest registers a complaint using the online form.
-          </p>
-
-        </div>
-
-        <div className="arrow">➜</div>
-
-        <div className="step">
-
-          <div className="circle">
-            <FaUserCheck />
-          </div>
-
-          <h3>Step 2</h3>
-
-          <h4>Admin Review</h4>
-
-          <p>
-            The administrator reviews and assigns the complaint.
-          </p>
-
-        </div>
-
-        <div className="arrow">➜</div>
-
-        <div className="step">
-
-          <div className="circle">
-            <FaTools />
-          </div>
-
-          <h3>Step 3</h3>
-
-          <h4>Processing</h4>
-
-          <p>
-            The responsible department works to resolve the issue.
-          </p>
-
-        </div>
-
-        <div className="arrow">➜</div>
-
-        <div className="step">
-
-          <div className="circle">
-            <FaCheckCircle />
-          </div>
-
-          <h3>Step 4</h3>
-
-          <h4>Resolved</h4>
-
-          <p>
-            Student tracks the complaint until it is successfully resolved.
-          </p>
-
-        </div>
+        ))}
 
       </div>
 
     </section>
-
   );
-
 }
 
 export default HowItWorks;

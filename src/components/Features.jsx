@@ -1,50 +1,83 @@
-import { FaClipboardList, FaSearch, FaComments, FaUserSecret } from "react-icons/fa";
 import "../styles/Features.css";
 
 function Features() {
+  const features = [
+    {
+      number: "01",
+      title: "Complaint Submission",
+      text: "Submit campus complaints through a structured and simple digital process."
+    },
+    {
+      number: "02",
+      title: "Complaint Tracking",
+      text: "Track the progress of submitted complaints using a unique complaint ID."
+    },
+    {
+      number: "03",
+      title: "Anonymous Reporting",
+      text: "Submit sensitive concerns without displaying your personal identity when appropriate."
+    },
+    {
+      number: "04",
+      title: "Feedback Management",
+      text: "Share suggestions and feedback that can help improve campus services."
+    },
+    {
+      number: "05",
+      title: "Administrative Review",
+      text: "Authorized staff can review, prioritize and manage complaints efficiently."
+    },
+    {
+      number: "06",
+      title: "Resolution Updates",
+      text: "Students can receive updates as their complaint moves through the resolution process."
+    }
+  ];
+
   return (
-    <section className="features">
+    <section className="features" id="features">
 
-      <h2>Why Choose Our System?</h2>
+      <div className="section-heading">
 
-      <p className="feature-subtitle">
-        A modern complaint and feedback platform designed for students,
-        faculty, and administrators.
-      </p>
+        <span>PLATFORM FEATURES</span>
 
-      <div className="feature-container">
+        <h2>
+          A better way to manage{" "}
+          <strong>campus concerns.</strong>
+        </h2>
 
-        <div className="feature-card">
-          <FaClipboardList className="icon" />
-          <h3>Easy Complaint</h3>
-          <p>
-            Submit complaints online within minutes from any device.
-          </p>
-        </div>
+        <p>
+          CFMS provides students and administrators with a centralized
+          platform for reporting, reviewing and resolving campus concerns.
+        </p>
 
-        <div className="feature-card">
-          <FaSearch className="icon" />
-          <h3>Real-Time Tracking</h3>
-          <p>
-            Track your complaint status from submission to resolution.
-          </p>
-        </div>
+      </div>
 
-        <div className="feature-card">
-          <FaComments className="icon" />
-          <h3>Feedback System</h3>
-          <p>
-            Share suggestions and rate institutional services.
-          </p>
-        </div>
 
-        <div className="feature-card">
-          <FaUserSecret className="icon" />
-          <h3>Anonymous Mode</h3>
-          <p>
-            Guests can submit complaints anonymously without registration.
-          </p>
-        </div>
+      <div className="features-grid">
+
+        {features.map((feature) => (
+
+          <div
+            className="feature-card"
+            key={feature.number}
+          >
+
+            <span className="feature-number">
+              {feature.number}
+            </span>
+
+            <h3>
+              {feature.title}
+            </h3>
+
+            <p>
+              {feature.text}
+            </p>
+
+          </div>
+
+        ))}
 
       </div>
 

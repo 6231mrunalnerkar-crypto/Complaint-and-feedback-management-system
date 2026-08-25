@@ -1,29 +1,95 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+:root {
+  --background: #f4f7f8;
+  --surface: #ffffff;
+  --surface-secondary: #eef4f5;
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+  --border: #d8e3e6;
+
+  --primary: #159c91;
+  --primary-hover: #11877e;
+
+  --text: #17252d;
+  --text-secondary: #687b83;
+
+  --button-text: #ffffff;
+
+  --shadow: rgba(23, 37, 45, 0.08);
 }
 
-html{
-    scroll-behavior:smooth;
+
+[data-theme="dark"] {
+  --background: #07111a;
+  --surface: #0c1a25;
+  --surface-secondary: #10232e;
+
+  --border: #1b3442;
+
+  --primary: #18c7b8;
+  --primary-hover: #12b3a5;
+
+  --text: #e8f1f5;
+  --text-secondary: #8fa6b2;
+
+  --button-text: #07111a;
+
+  --shadow: rgba(0, 0, 0, 0.3);
 }
 
-body{
-    background:linear-gradient(
-        135deg,
-        #00060e,
-        #72051d
-    );
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-a{
-    text-decoration:none;
+
+html {
+  scroll-behavior: smooth;
 }
 
-button{
-    cursor:pointer;
-    transition:.3s;
+
+body {
+  margin: 0;
+
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  background: var(--background);
+
+  color: var(--text);
+
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+
+a {
+  text-decoration: none;
+}
+
+
+#root {
+  min-height: 100vh;
+}
+
+
+/* Smooth theme transition */
+
+* {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
 }

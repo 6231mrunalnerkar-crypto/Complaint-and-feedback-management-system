@@ -25,8 +25,7 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="how-section" id="how-it-works">
-
+    <section className="how-section" id="how-it-works" aria-label="How it works">
       <div className="how-heading">
         <span>HOW IT WORKS</span>
 
@@ -42,27 +41,14 @@ function HowItWorks() {
       </div>
 
       <div className="steps-container">
-
         {steps.map((step) => (
           <div className="step-card" key={step.number}>
-
-            <span className="step-number">
-              {step.number}
-            </span>
-
-            <h3>
-              {step.title}
-            </h3>
-
-            <p>
-              {step.text}
-            </p>
-
+            <span className="step-number">{step.number}</span>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
           </div>
         ))}
-
       </div>
-
     </section>
   );
 }

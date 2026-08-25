@@ -1,44 +1,57 @@
-import React from "react";
+import { Link } from "react-router-dom";
 import "../styles/Footer.css";
 
 function Footer() {
   return (
     <footer className="footer" id="about">
+
       <div className="footer-container">
+
         <div className="footer-brand">
-          <div className="nav-logo">
-            <div className="logo-box">C</div>
+
+          <Link to="/" className="footer-logo">
+            <span className="footer-logo-icon">C</span>
             <span>CampusVoice</span>
-          </div>
+          </Link>
+
           <p>
-            Empowering students and administration through efficient, transparent,
-            and anonymous complaint management.
+            A centralized platform that helps students raise concerns,
+            share feedback and stay connected with campus administration.
           </p>
+
         </div>
 
         <div className="footer-links">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#track">Track Status</a></li>
-          </ul>
+
+          <h4>Explore</h4>
+
+          <a href="#home">Home</a>
+          <a href="#features">Features</a>
+          <a href="#how-it-works">How It Works</a>
+
         </div>
 
         <div className="footer-links">
-          <h4>Portal Access</h4>
-          <ul>
-            <li><a href="/login">Student Login</a></li>
-            <li><a href="/register">Student Register</a></li>
-            <li><a href="/login">Admin Portal</a></li>
-          </ul>
+
+          <h4>Account</h4>
+
+          <Link to="/login">Student Login</Link>
+          <Link to="/register">Create Account</Link>
+
         </div>
+
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} CampusVoice. All rights reserved.</p>
+        <span>
+          © {new Date().getFullYear()} CampusVoice
+        </span>
+
+        <span>
+          Complaint & Feedback Management System
+        </span>
       </div>
+
     </footer>
   );
 }

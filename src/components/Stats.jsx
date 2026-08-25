@@ -1,22 +1,48 @@
 import "../styles/Stats.css";
 
 function Stats() {
-  const statItems = [
-    { title: "Simple", description: "Complaint submission" },
-    { title: "Transparent", description: "Status tracking" },
-    { title: "Organized", description: "Administrative workflow" },
-    { title: "Secure", description: "Student feedback" },
+  const stats = [
+    {
+      value: "01",
+      title: "Simple",
+      text: "Easy complaint submission"
+    },
+    {
+      value: "02",
+      title: "Transparent",
+      text: "Clear status tracking"
+    },
+    {
+      value: "03",
+      title: "Organized",
+      text: "Structured administration"
+    },
+    {
+      value: "04",
+      title: "Secure",
+      text: "Responsible reporting"
+    }
   ];
 
   return (
-    <section className="stats-section" aria-label="Platform highlights">
-      <div className="stats-container">
-        {statItems.map((item, index) => (
-          <div key={index} className="stat-item">
-            <strong>{item.title}</strong>
-            <span>{item.description}</span>
+  
+  <section className="stats-section scroll-reveal">      <div className="stats-container">
+
+        {stats.map((stat) => (
+          <div className="stat-item" key={stat.value}>
+
+            <span className="stat-number">
+              {stat.value}
+            </span>
+
+            <div>
+              <strong>{stat.title}</strong>
+              <p>{stat.text}</p>
+            </div>
+
           </div>
         ))}
+
       </div>
     </section>
   );

@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "../styles/Auth.css";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
+
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+  const handleLogin = (event) => {
+    event.preventDefault();
+
     if (role === "admin") {
       navigate("/admin-dashboard");
     } else {
@@ -17,55 +20,116 @@ function Login() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", padding: "20px" }}>
-      <div className="complaint-status-card" style={{ width: "100%", maxWidth: "420px" }}>
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <div className="logo-box" style={{ margin: "0 auto 12px auto" }}>C</div>
-          <h2>Welcome Back</h2>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>Sign in to CampusVoice to manage your complaints</p>
+    <main className="auth-page">
+
+      <div className="auth-card">
+
+        <div className="auth-header">
+
+          <Link to="/" className="auth-logo">
+            <span>C</span>
+            <strong>CampusVoice</strong>
+          </Link>
+
+          <h1>Welcome Back</h1>
+
+          <p>
+            Sign in to manage your complaints and feedback.
+          </p>
+
         </div>
 
-        <form onSubmit={handleLogin}>
-          <div className="form-group">
-            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Account Type</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="student">Student / User</option>
-              <option value="admin">Administrator</option>
-            </select>
-          </div>
+
+        <form className="auth-form" onSubmit={handleLogin}>
 
           <div className="form-group">
-            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Email Address</label>
+
+            <label htmlFor="role">
+              Account Type
+            </label>
+
+            <select
+              id="role"
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+            >
+              <option value="student">
+                Student / User
+              </option>
+
+              <option value="admin">
+                Administrator
+              </option>
+            </select>
+
+          </div>
+
+
+          <div className="form-group">
+
+            <label htmlFor="email">
+              Email Address
+            </label>
+
             <input
+              id="email"
               type="email"
               required
               placeholder="student@campus.edu"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
             />
+
           </div>
+
 
           <div className="form-group">
-            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Password</label>
+
+            <label htmlFor="password">
+              Password
+            </label>
+
             <input
+              id="password"
               type="password"
               required
-              placeholder="••••••••"
+              placeholder="Enter your password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
             />
+
           </div>
 
-          <button type="submit" className="btn-primary-large" style={{ width: "100%", border: "none", cursor: "pointer", marginTop: "10px" }}>
+
+          <button
+            type="submit"
+            className="auth-submit"
+          >
             Sign In as {role === "admin" ? "Admin" : "Student"}
           </button>
+
         </form>
 
-        <p style={{ textAlign: "center", marginTop: "20px", color: "#64748b", fontSize: "0.9rem" }}>
-          Don't have an account? <Link to="/register" style={{ color: "#2563eb", fontWeight: "600" }}>Register</Link>
-        </p>
+
+        <div className="auth-footer">
+
+          <span>
+            Don't have an account?
+          </span>
+
+          <Link to="/register">
+            Create an account
+          </Link>
+
+          <Link to="/" className="back-home">
+            Back to CampusVoice
+          </Link>
+
+        </div>
+
       </div>
-    </div>
+
+    </main>
   );
 }
 

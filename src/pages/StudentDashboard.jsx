@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import "../styles/Dashboard.css";
 
 const initialData = [
   { id: "CMP-1001", category: "Infrastructure", title: "Broken AC in Lab 3", date: "2026-08-20", status: "In Progress", priority: "High" },

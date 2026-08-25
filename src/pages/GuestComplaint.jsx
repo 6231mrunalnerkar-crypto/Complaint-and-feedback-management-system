@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import "../styles/Auth.css";
 
 function GuestComplaint() {
   const [submittedId, setSubmittedId] = useState(null);
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -11,106 +13,234 @@ function GuestComplaint() {
     description: "",
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Generate a random guest complaint tracking ID
-    const randomId = `CMP-GUEST-${Math.floor(1000 + Math.random() * 9000)}`;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const randomId = `CMP-GUEST-${Math.floor(
+      1000 + Math.random() * 9000
+    )}`;
+
     setSubmittedId(randomId);
   };
 
+  const resetForm = () => {
+    setSubmittedId(null);
+
+    setFormData({
+      fullName: "",
+      email: "",
+      category: "Infrastructure",
+      subject: "",
+      description: "",
+    });
+  };
+
   return (
-    <div style={{ padding: "40px 20px", maxWidth: "600px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "20px" }}>
-        <Link to="/" style={{ color: "#2563eb", textDecoration: "none", fontWeight: "600" }}>
-          ← Back to Home
+    <main className="guest-page">
+
+      <div className="guest-container">
+
+        <Link to="/" className="guest-back">
+          Back to Home
         </Link>
-      </div>
 
-      <div className="complaint-status-card">
-        <h2 style={{ fontSize: "1.8rem", marginBottom: "8px" }}>Guest Complaint Form</h2>
-        <p style={{ color: "#64748b", marginBottom: "24px" }}>
-          Submit your issue directly without creating an account. You will receive a tracking ID.
-        </p>
 
-        {submittedId ? (
-          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "20px", borderRadius: "8px", textAlign: "center" }}>
-            <h3 style={{ color: "#166534", marginBottom: "10px" }}>Complaint Submitted Successfully!</h3>
-            <p style={{ color: "#15803d", marginBottom: "15px" }}>Please save your tracking ID to check status on the homepage:</p>
-            <div style={{ fontSize: "1.5rem", fontWeight: "bold", background: "#ffffff", padding: "10px", borderRadius: "6px", border: "1px dashed #166534", display: "inline-block", color: "#0f172a" }}>
-              {submittedId}
-            </div>
-            <div style={{ marginTop: "20px" }}>
-              <button className="btn-primary" onClick={() => { setSubmittedId(null); setFormData({ fullName: "", email: "", category: "Infrastructure", subject: "", description: "" }); }}>
+        <div className="guest-card">
+
+          {!submittedId ? (
+            <>
+              <div className="guest-header">
+
+                <span className="auth-eyebrow">
+                  GUEST SUBMISSION
+                </span>
+
+                <h1>
+                  Submit a complaint
+                </h1>
+
+                <p>
+                  Report a campus concern without creating
+                  a student account.
+                </p>
+
+              </div>
+
+
+              <form
+                className="auth-form"
+                onSubmit={handleSubmit}
+              >
+
+                <div className="form-group">
+
+                  <label htmlFor="guestName">
+                    Full Name
+                  </label>
+
+                  <input
+                    id="guestName"
+                    name="fullName"
+                    type="text"
+                    required
+                    placeholder="Enter your name"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                  />
+
+                </div>
+
+
+                <div className="form-group">
+
+                  <label htmlFor="guestEmail">
+                    Email Address
+                  </label>
+
+                  <input
+                    id="guestEmail"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+
+                </div>
+
+
+                <div className="form-group">
+
+                  <label htmlFor="guestCategory">
+                    Category
+                  </label>
+
+                  <select
+                    id="guestCategory"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                  >
+                    <option value="Infrastructure">
+                      Infrastructure / Campus Facilities
+                    </option>
+
+                    <option value="Event/Guest Services">
+                      Event / Guest Services
+                    </option>
+
+                    <option value="Security">
+                      Security & Access
+                    </option>
+
+                    <option value="Other">
+                      Other
+                    </option>
+                  </select>
+
+                </div>
+
+
+                <div className="form-group">
+
+                  <label htmlFor="guestSubject">
+                    Subject
+                  </label>
+
+                  <input
+                    id="guestSubject"
+                    name="subject"
+                    type="text"
+                    required
+                    placeholder="Brief summary of your concern"
+                    value={formData.subject}
+                    onChange={handleChange}
+                  />
+
+                </div>
+
+
+                <div className="form-group">
+
+                  <label htmlFor="guestDescription">
+                    Description
+                  </label>
+
+                  <textarea
+                    id="guestDescription"
+                    name="description"
+                    required
+                    rows="5"
+                    placeholder="Describe the issue in detail"
+                    value={formData.description}
+                    onChange={handleChange}
+                  />
+
+                </div>
+
+
+                <button
+                  type="submit"
+                  className="auth-submit"
+                >
+                  Submit Complaint
+                </button>
+
+              </form>
+            </>
+          ) : (
+            <div className="guest-success">
+
+              <span className="success-label">
+                SUBMISSION RECEIVED
+              </span>
+
+              <h1>
+                Complaint submitted
+              </h1>
+
+              <p>
+                Keep the following tracking ID so you can
+                reference this complaint later.
+              </p>
+
+              <div className="tracking-id">
+                {submittedId}
+              </div>
+
+              <button
+                type="button"
+                className="auth-submit"
+                onClick={resetForm}
+              >
                 Submit Another Complaint
               </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Full Name</label>
-              <input
-                type="text"
-                required
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              />
-            </div>
 
-            <div className="form-group">
-              <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Email Address</label>
-              <input
-                type="email"
-                required
-                placeholder="john@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              <Link
+                to="/"
+                className="guest-home-link"
               >
-                <option value="Infrastructure">Infrastructure / Campus Facilities</option>
-                <option value="Event/Guest Services">Event / Guest Services</option>
-                <option value="Security">Security & Access</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+                Return to CampusVoice
+              </Link>
 
-            <div className="form-group">
-              <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Subject</label>
-              <input
-                type="text"
-                required
-                placeholder="Brief summary of the complaint"
-                value={formData.subject}
-                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              />
             </div>
+          )}
 
-            <div className="form-group">
-              <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Description</label>
-              <textarea
-                rows="5"
-                required
-                placeholder="Detailed description of the issue..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              ></textarea>
-            </div>
+        </div>
 
-            <button type="submit" className="btn-primary-large" style={{ width: "100%", cursor: "pointer", border: "none" }}>
-              Submit Guest Complaint
-            </button>
-          </form>
-        )}
       </div>
-    </div>
+
+    </main>
   );
 }
 

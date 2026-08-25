@@ -1,13 +1,15 @@
 .how-section {
-  padding: 100px 8%;
+  padding: 105px 6%;
 
-  background: var(--background);
+  background: var(--surface);
+
+  border-top: 1px solid var(--border);
 }
 
 .how-heading {
-  max-width: 650px;
+  max-width: 700px;
 
-  margin: 0 auto 55px;
+  margin: 0 auto 60px;
 
   text-align: center;
 }
@@ -15,9 +17,9 @@
 .how-heading > span {
   color: var(--primary);
 
-  font-size: 11px;
+  font-size: 10px;
 
-  font-weight: 700;
+  font-weight: 800;
 
   letter-spacing: 2px;
 }
@@ -27,7 +29,9 @@
 
   color: var(--text);
 
-  font-size: 40px;
+  font-size: clamp(32px, 4vw, 45px);
+
+  letter-spacing: -1.5px;
 }
 
 .how-heading h2 strong {
@@ -35,15 +39,18 @@
 }
 
 .how-heading p {
+  margin: 0 auto;
+
   color: var(--text-secondary);
 
   font-size: 14px;
 
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .steps-container {
-  max-width: 1100px;
+  width: 100%;
+  max-width: 1200px;
 
   margin: 0 auto;
 
@@ -57,25 +64,41 @@
 .step-card {
   padding: 28px;
 
-  background: var(--surface);
+  background: var(--background);
 
   border: 1px solid var(--border);
 
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
-.step-number {
+.step-top {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.step-top > span {
   color: var(--primary);
 
-  font-size: 12px;
+  font-size: 11px;
 
-  font-weight: 700;
+  font-weight: 800;
 
   letter-spacing: 1px;
 }
 
+.step-line {
+  flex: 1;
+
+  height: 1px;
+
+  background: var(--border);
+}
+
 .step-card h3 {
-  margin: 20px 0 10px;
+  margin: 28px 0 10px;
 
   color: var(--text);
 
@@ -83,16 +106,22 @@
 }
 
 .step-card p {
+  margin: 0;
+
   color: var(--text-secondary);
 
-  font-size: 13px;
+  font-size: 12px;
 
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 @media (max-width: 850px) {
   .steps-container {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .step-line {
+    display: none;
   }
 }
 

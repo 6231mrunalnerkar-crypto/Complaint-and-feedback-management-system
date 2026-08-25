@@ -1,102 +1,83 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/Auth.css";
 
 function Register() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
+    studentId: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
-    console.log("Registering with:", formData);
-    // Navigates to Login page after submission
-    navigate("/login");
+    // Redirect to student dashboard upon registration
+    navigate("/student-dashboard");
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="logo-box">C</div>
-          <h2>Create an account</h2>
-          <p>Join CampusVoice to submit and track complaints.</p>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", padding: "20px" }}>
+      <div className="complaint-status-card" style={{ width: "100%", maxWidth: "450px" }}>
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <div className="logo-box" style={{ margin: "0 auto 12px auto" }}>C</div>
+          <h2>Create Account</h2>
+          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>Register to log and track your complaints</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleRegister}>
           <div className="form-group">
-            <label htmlFor="fullName">Full Name</label>
+            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Full Name</label>
             <input
               type="text"
-              id="fullName"
-              name="fullName"
+              required
               placeholder="John Doe"
               value={formData.fullName}
-              onChange={handleChange}
-              required
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email address</label>
+            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Student ID / Roll No</label>
+            <input
+              type="text"
+              required
+              placeholder="STU-2026-001"
+              value={formData.studentId}
+              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Email Address</label>
             <input
               type="email"
-              id="email"
-              name="email"
+              required
               placeholder="student@campus.edu"
               value={formData.email}
-              onChange={handleChange}
-              required
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label style={{ fontWeight: "600", fontSize: "0.9rem" }}>Password</label>
             <input
               type="password"
-              id="password"
-              name="password"
+              required
               placeholder="••••••••"
               value={formData.password}
-              onChange={handleChange}
-              required
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <button type="submit" className="auth-btn">
-            Create Account
+          <button type="submit" className="btn-primary-large" style={{ width: "100%", border: "none", cursor: "pointer", marginTop: "10px" }}>
+            Register
           </button>
         </form>
 
-        <div className="auth-footer">
-          <p>
-            Already have an account? <Link to="/login">Sign in here</Link>
-          </p>
-          <p>
-            <Link to="/">← Back to Home</Link>
-          </p>
-        </div>
+        <p style={{ textAlign: "center", marginTop: "20px", color: "#64748b", fontSize: "0.9rem" }}>
+          Already have an account? <Link to="/login" style={{ color: "#2563eb", fontWeight: "600" }}>Sign In</Link>
+        </p>
       </div>
     </div>
   );

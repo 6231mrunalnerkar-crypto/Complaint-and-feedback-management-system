@@ -1,82 +1,67 @@
+import React from "react";
+import { Link } from "react-router-dom";
 import "../styles/Hero.css";
 
 function Hero() {
   return (
-    <section className="hero" id="home">
-      <div className="hero-container">
-        <div className="hero-content">
-          <div className="hero-system-label">
-            COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM
-          </div>
+    <section className="hero-section" id="home">
+      <div className="hero-content">
+        <span className="hero-badge">COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM</span>
+        <h1>
+          Your concerns, <br />
+          <span className="highlight-text">properly heard.</span>
+        </h1>
+        <p className="hero-subtext">Campus concerns.</p>
+        <p className="hero-description">
+          Submit complaints, share feedback and track resolutions through one
+          simple and transparent platform built for your campus.
+        </p>
 
-          <h1>
-            Your concerns,
-            <br />
-            <span>properly heard.</span>
-          </h1>
-
-          <p className="hero-subtitle">Campus concerns.</p>
-
-          <p>
-            Submit complaints, share feedback and track resolutions through one
-            simple and transparent platform built for your campus.
-          </p>
-
-          <div className="hero-buttons">
-            <a href="/login" className="primary-btn">
-              Submit a Complaint
-            </a>
-            <a href="#track" className="secondary-btn">
-              Track Complaint
-            </a>
-          </div>
-
-          <div className="auth-section">
-            <span>Already have an account?</span>
-            <a href="/login" className="hero-login-btn">
-              Log In
-            </a>
-            <a href="/register" className="hero-register-btn">
-              Register
-            </a>
-          </div>
+        <div className="hero-buttons">
+          <Link to="/login" className="btn-primary-large">
+            Submit a Complaint
+          </Link>
+          <a href="#track" className="btn-secondary-large">
+            Track Complaint
+          </a>
         </div>
 
-        <div className="complaint-card" id="track">
-          <div className="complaint-card-header">
+        <div className="hero-auth-prompt">
+          <span>Already have an account?</span>
+          <Link to="/login" className="auth-chip">Log In</Link>
+          <Link to="/register" className="auth-chip outline">Register</Link>
+        </div>
+      </div>
+
+      <div className="hero-card-container">
+        <div className="complaint-status-card">
+          <div className="card-header">
             <span>COMPLAINT STATUS</span>
-            <span className="status-indicator">Active</span>
+            <span className="status-badge">Active</span>
           </div>
 
-          <h3>Check your complaint</h3>
+          <h2>Check your complaint</h2>
+          <p>Enter your complaint ID to view its current status and updates.</p>
 
-          <p>
-            Enter your complaint ID to view its current status and updates.
-          </p>
-
-          <form className="complaint-search" onSubmit={(e) => e.preventDefault()}>
+          <div className="search-box">
             <input type="text" placeholder="Enter complaint ID" />
-            <button type="submit">Check Status</button>
-          </form>
+            <button className="btn-search">Check Status</button>
+          </div>
 
-          <div className="complaint-info">
-            <div className="info-row">
+          <div className="status-timeline">
+            <div className="timeline-item">
               <span>Complaint status</span>
               <strong>Track after submission</strong>
             </div>
-
-            <div className="info-row">
+            <div className="timeline-item">
               <span>Status updates</span>
-              <strong className="status-text">
-                Available throughout the process
-              </strong>
+              <span className="status-active-text">Available throughout the process</span>
             </div>
           </div>
 
-          <div className="complaint-footer">
-            Use the complaint ID provided after submitting an issue to check its
-            progress.
-          </div>
+          <p className="card-footer-text">
+            Use the complaint ID provided after submitting an issue to check its progress.
+          </p>
         </div>
       </div>
     </section>

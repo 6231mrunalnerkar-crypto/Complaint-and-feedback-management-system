@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "../styles/Auth.css";
 
 function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -14,6 +16,8 @@ function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Logging in with:", formData);
+    // Sign In click hone par Student Dashboard par redirect karega
+    navigate("/dashboard");
   };
 
   return (
@@ -59,10 +63,10 @@ function Login() {
 
         <div className="auth-footer">
           <p>
-            Don't have an account? <a href="/register">Register here</a>
+            Don't have an account? <Link to="/register">Register here</Link>
           </p>
           <p>
-            <a href="/">← Back to Home</a>
+            <Link to="/">← Back to Home</Link>
           </p>
         </div>
       </div>

@@ -35,52 +35,28 @@ function Features() {
   ];
 
   return (
-    <section className="features" id="features">
-
+    <section className="features" id="features" aria-label="Features section">
       <div className="section-heading">
-
         <span>PLATFORM FEATURES</span>
-
         <h2>
           A better way to manage{" "}
           <strong>campus concerns.</strong>
         </h2>
-
         <p>
           CFMS provides students and administrators with a centralized
           platform for reporting, reviewing and resolving campus concerns.
         </p>
-
       </div>
-
 
       <div className="features-grid">
-
         {features.map((feature) => (
-
-          <div
-            className="feature-card"
-            key={feature.number}
-          >
-
-            <span className="feature-number">
-              {feature.number}
-            </span>
-
-            <h3>
-              {feature.title}
-            </h3>
-
-            <p>
-              {feature.text}
-            </p>
-
+          <div className="feature-card" key={feature.number}>
+            <span className="feature-number">{feature.number}</span>
+            <h3>{feature.title}</h3>
+            <p>{feature.text}</p>
           </div>
-
         ))}
-
       </div>
-
     </section>
   );
 }

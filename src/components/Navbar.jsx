@@ -22,8 +22,11 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-container">
 
+        {/* Logo */}
         <Link to="/" className="navbar-brand">
-          <div className="brand-icon">C</div>
+          <div className="brand-icon">
+            C
+          </div>
 
           <div className="brand-text">
             <span className="brand-name">
@@ -36,13 +39,26 @@ function Navbar() {
           </div>
         </Link>
 
+
+        {/* Navigation Links */}
         <div className="navbar-links">
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How It Works</a>
-          <a href="#categories">Categories</a>
-          <a href="#about">About</a>
+
+          <Link to="/#how-it-works">
+            How It Works
+          </Link>
+
+          <Link to="/#categories">
+            Categories
+          </Link>
+
+          <Link to="/about">
+            About
+          </Link>
+
         </div>
 
+
+        {/* Theme Toggle */}
         <div className="navbar-actions">
 
           <button

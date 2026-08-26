@@ -177,3 +177,28 @@
     margin-left: auto;
   }
 }
+
+
+
+/* Keep navbar buttons looking exactly like navbar links */
+
+.navbar-links a,
+.navbar-links button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: inherit;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.navbar-links a:hover,
+.navbar-links button:hover {
+  color: #10b981;
+}

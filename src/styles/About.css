@@ -1,0 +1,619 @@
+/* =========================================================
+   CAMPUSVOICE - ABOUT PAGE
+   ========================================================= */
+
+.about-page {
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   COMMON
+   ========================================================= */
+
+.about-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #10b981;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.about-section {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 30px;
+}
+
+.about-section-heading {
+  max-width: 760px;
+  margin-bottom: 55px;
+}
+
+.about-section-heading h2 {
+  margin: 0 0 20px;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+
+.about-section-heading h2 span {
+  color: #10b981;
+}
+
+.about-section-heading p {
+  margin: 0;
+  max-width: 720px;
+  font-size: 16px;
+  line-height: 1.8;
+  opacity: 0.68;
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.about-hero {
+  position: relative;
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 30px;
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(16, 185, 129, 0.12),
+      transparent 42%
+    );
+}
+
+.about-hero-content {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.about-hero h1 {
+  margin: 0;
+  font-size: clamp(46px, 8vw, 86px);
+  line-height: 0.98;
+  letter-spacing: -4px;
+  font-weight: 900;
+}
+
+.about-hero h1 span {
+  color: #10b981;
+}
+
+.about-hero p {
+  max-width: 720px;
+  margin: 30px auto 0;
+  font-size: 17px;
+  line-height: 1.8;
+  opacity: 0.7;
+}
+
+.about-hero-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 35px;
+  flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.about-primary-btn,
+.about-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 24px;
+  border-radius: 9px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.about-primary-btn {
+  color: #ffffff;
+  background: #10b981;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+}
+
+.about-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
+}
+
+.about-secondary-btn {
+  color: inherit;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  background: rgba(128, 128, 128, 0.05);
+}
+
+.about-secondary-btn:hover {
+  transform: translateY(-2px);
+  border-color: #10b981;
+}
+
+
+/* =========================================================
+   WHY CAMPUSVOICE
+   ========================================================= */
+
+.about-problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.about-info-card {
+  padding: 30px;
+  min-height: 240px;
+  border-radius: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.16);
+  background: rgba(128, 128, 128, 0.04);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.about-info-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.about-card-number {
+  margin-bottom: 35px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #10b981;
+}
+
+.about-info-card h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.about-info-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  opacity: 0.62;
+}
+
+
+/* =========================================================
+   OBJECTIVES
+   ========================================================= */
+
+.about-objectives {
+  padding-top: 80px;
+}
+
+.objectives-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.objective-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 25px;
+  padding: 27px 20px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.objective-item:nth-child(odd) {
+  border-right: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.objective-item span {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #10b981;
+  letter-spacing: 1px;
+}
+
+.objective-item p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  opacity: 0.72;
+}
+
+
+/* =========================================================
+   HOW IT WORKS
+   ========================================================= */
+
+.about-process {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.process-step {
+  flex: 1;
+  text-align: center;
+}
+
+.process-number {
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.process-step h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.process-step p {
+  margin: 0 auto;
+  max-width: 210px;
+  font-size: 13px;
+  line-height: 1.7;
+  opacity: 0.6;
+}
+
+.process-line {
+  flex: 0 0 70px;
+  height: 1px;
+  margin-top: 27px;
+  background: rgba(16, 185, 129, 0.3);
+}
+
+
+/* =========================================================
+   SYSTEM HIGHLIGHTS
+   ========================================================= */
+
+.about-features {
+  padding-top: 80px;
+}
+
+.features-about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.feature-about-card {
+  min-height: 190px;
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  background: rgba(128, 128, 128, 0.035);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.feature-about-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.feature-about-card h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.feature-about-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  opacity: 0.62;
+}
+
+
+/* =========================================================
+   TERMS & CONDITIONS
+   ========================================================= */
+
+.about-terms {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 110px 30px;
+}
+
+.about-terms .about-section-heading {
+  margin-bottom: 50px;
+}
+
+.terms-list {
+  border-top: 1px solid rgba(128, 128, 128, 0.17);
+}
+
+.term-item {
+  display: grid;
+  grid-template-columns: 55px 1fr;
+  gap: 25px;
+  padding: 30px 10px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.17);
+  transition: background 0.25s ease;
+}
+
+.term-item:hover {
+  background: rgba(16, 185, 129, 0.025);
+}
+
+.term-item > span {
+  padding-top: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #10b981;
+  letter-spacing: 1px;
+}
+
+.term-item h3 {
+  margin: 0 0 9px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.term-item p {
+  max-width: 900px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  opacity: 0.62;
+}
+
+
+/* =========================================================
+   IMPORTANT NOTICE
+   ========================================================= */
+
+.terms-notice {
+  margin-top: 35px;
+  padding: 25px 28px;
+  border-left: 3px solid #10b981;
+  border-radius: 0 12px 12px 0;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.terms-notice strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #10b981;
+}
+
+.terms-notice p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  opacity: 0.65;
+}
+
+
+/* =========================================================
+   CALL TO ACTION
+   ========================================================= */
+
+.about-cta {
+  width: calc(100% - 60px);
+  max-width: 1140px;
+  margin: 30px auto 100px;
+  padding: 90px 30px;
+  text-align: center;
+  border-radius: 22px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(16, 185, 129, 0.11),
+      transparent 60%
+    );
+}
+
+.about-cta h2 {
+  margin: 0;
+  font-size: clamp(36px, 6vw, 62px);
+  line-height: 1.05;
+  letter-spacing: -2px;
+  font-weight: 850;
+}
+
+.about-cta p {
+  max-width: 550px;
+  margin: 22px auto 30px;
+  font-size: 15px;
+  line-height: 1.7;
+  opacity: 0.65;
+}
+
+.about-cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .about-page {
+  color: #f4f4f5;
+}
+
+[data-theme="dark"] .about-info-card,
+[data-theme="dark"] .feature-about-card {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+
+/* =========================================================
+   LIGHT MODE
+   ========================================================= */
+
+[data-theme="light"] .about-page {
+  color: #18181b;
+}
+
+[data-theme="light"] .about-info-card,
+[data-theme="light"] .feature-about-card {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .about-section,
+  .about-terms {
+    padding: 80px 25px;
+  }
+
+  .about-problem-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-about-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-process {
+    flex-wrap: wrap;
+  }
+
+  .process-step {
+    flex: 1 1 40%;
+  }
+
+  .process-line {
+    display: none;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .about-hero {
+    min-height: 70vh;
+    padding: 80px 20px;
+  }
+
+  .about-hero h1 {
+    font-size: clamp(42px, 13vw, 62px);
+    letter-spacing: -2.5px;
+  }
+
+  .about-hero p {
+    font-size: 15px;
+  }
+
+  .about-section,
+  .about-terms {
+    padding: 65px 20px;
+  }
+
+  .about-section-heading {
+    margin-bottom: 35px;
+  }
+
+  .about-section-heading h2 {
+    font-size: 34px;
+  }
+
+  .features-about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .objectives-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .objective-item:nth-child(odd) {
+    border-right: none;
+  }
+
+  .about-process {
+    display: block;
+  }
+
+  .process-step {
+    margin-bottom: 45px;
+  }
+
+  .process-step p {
+    max-width: 300px;
+  }
+
+  .term-item {
+    grid-template-columns: 35px 1fr;
+    gap: 15px;
+    padding: 25px 5px;
+  }
+
+  .terms-notice {
+    padding: 20px;
+  }
+
+  .about-cta {
+    width: calc(100% - 40px);
+    margin-bottom: 60px;
+    padding: 65px 20px;
+    border-radius: 17px;
+  }
+
+  .about-cta h2 {
+    font-size: 38px;
+  }
+
+  .about-primary-btn,
+  .about-secondary-btn {
+    width: 100%;
+  }
+
+  .about-hero-actions,
+  .about-cta-buttons {
+    width: 100%;
+  }
+
+}

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/Hero.css";
 
 function Hero() {
   const heroRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -33,6 +34,14 @@ function Hero() {
       hero.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
+
+  const handleSubmitComplaint = () => {
+    navigate("/login", {
+      state: {
+        redirectTo: "/submit-complaint",
+      },
+    });
+  };
 
   return (
     <section className="hero" id="home" ref={heroRef}>
@@ -71,12 +80,14 @@ function Hero() {
 
           <div className="hero-buttons">
 
-            <Link
-              to="/guest-complaint"
+            {/* Submit Complaint → Login → Complaint Form */}
+            <button
+              type="button"
+              onClick={handleSubmitComplaint}
               className="hero-primary-btn"
             >
               Submit a Complaint
-            </Link>
+            </button>
 
             <a
               href="#complaint-tracker"
@@ -88,7 +99,6 @@ function Hero() {
           </div>
 
         </div>
-
 
         <div className="hero-auth-card scroll-reveal reveal-delay-2">
 

@@ -1,219 +1,679 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "../styles/AdminDashboard.css";
 
-const AdminDashboard = () => {
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [complaints, setComplaints] = useState([]);
-  const [activeTab, setActiveTab] = useState('feedbacks');
+const initialComplaints = [
+  {
+    id: "CMP-1001",
+    category: "Hostel",
+    title: "Water leakage in room 204",
+    status: "Pending",
+    date: "2026-08-25",
+    priority: "High",
+  },
+  {
+    id: "CMP-1002",
+    category: "Library",
+    title: "AC not working on 2nd floor",
+    status: "Resolved",
+    date: "2026-08-24",
+    priority: "Medium",
+  },
+  {
+    id: "CMP-1003",
+    category: "Canteen",
+    title: "Food quality issue",
+    status: "Pending",
+    date: "2026-08-26",
+    priority: "Low",
+  },
+];
 
-  useEffect(() => {
-    // Load Feedbacks from localStorage
-    const storedFeedbacks = JSON.parse(localStorage.getItem('cfms_feedbacks') || '[]');
-    setFeedbacks(storedFeedbacks);
+function AdminDashboard() {
+  const navigate = useNavigate();
 
-    // Load Mock/Stored Complaints from localStorage
-    const storedComplaints = JSON.parse(localStorage.getItem('cfms_complaints') || '[]');
-    if (storedComplaints.length === 0) {
-      // Mock initial data if empty
-      const initialComplaints = [
-        { id: 'CMP-1001', category: 'Hostel', title: 'Water leakage in room 204', status: 'Pending', date: '2026-08-25', priority: 'High' },
-        { id: 'CMP-1002', category: 'Library', title: 'AC not working on 2nd floor', status: 'Resolved', date: '2026-08-24', priority: 'Medium' },
-        { id: 'CMP-1003', category: 'Canteen', title: 'Food quality issue', status: 'Pending', date: '2026-08-26', priority: 'Low' }
-      ];
-      localStorage.setItem('cfms_complaints', JSON.stringify(initialComplaints));
-      setComplaints(initialComplaints);
-    } else {
-      setComplaints(storedComplaints);
+  const [activeTab, setActiveTab] = useState("complaints");
+
+  const [complaints] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cfms_complaints");
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error("Error loading complaints:", error);
     }
-  }, []);
 
-  // Stats Calculations
-  const totalFeedbacks = feedbacks.length;
-  const avgRating = totalFeedbacks > 0 
-    ? (feedbacks.reduce((acc, curr) => acc + Number(curr.rating), 0) / totalFeedbacks).toFixed(1)
-    : '0.0';
-  
+    localStorage.setItem(
+      "cfms_complaints",
+      JSON.stringify(initialComplaints)
+    );
+
+    return initialComplaints;
+  });
+
+  const [feedbacks] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cfms_feedbacks");
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error("Error loading feedbacks:", error);
+    }
+
+    return [];
+  });
+
+  /* =====================================================
+     STATISTICS
+     ===================================================== */
+
   const totalComplaints = complaints.length;
-  const pendingComplaints = complaints.filter(c => c.status === 'Pending').length;
-  const resolvedComplaints = complaints.filter(c => c.status === 'Resolved').length;
 
-  const cardStyle = {
-    backgroundColor: '#111827',
-    border: '1px solid #1f2937',
-    borderRadius: '12px',
-    padding: '18px',
-    flex: '1',
-    minWidth: '140px'
+  const pendingComplaints = complaints.filter(
+    (complaint) => complaint.status === "Pending"
+  ).length;
+
+  const inProgressComplaints = complaints.filter(
+    (complaint) =>
+      complaint.status === "In Progress" ||
+      complaint.status === "In-Progress"
+  ).length;
+
+  const resolvedComplaints = complaints.filter(
+    (complaint) => complaint.status === "Resolved"
+  ).length;
+
+  const totalFeedbacks = feedbacks.length;
+
+  const avgRating =
+    totalFeedbacks > 0
+      ? (
+          feedbacks.reduce(
+            (total, feedback) => total + Number(feedback.rating || 0),
+            0
+          ) / totalFeedbacks
+        ).toFixed(1)
+      : "0.0";
+
+  /* =====================================================
+     LOGOUT
+     ===================================================== */
+
+  const handleLogout = () => {
+    localStorage.removeItem("campusvoice-user");
+    localStorage.removeItem("cfms-user");
+    localStorage.removeItem("user");
+
+    navigate("/login");
+  };
+
+  /* =====================================================
+     STATUS CLASS
+     ===================================================== */
+
+  const getStatusClass = (status) => {
+    if (status === "Resolved") {
+      return "resolved";
+    }
+
+    if (
+      status === "In Progress" ||
+      status === "In-Progress"
+    ) {
+      return "progress";
+    }
+
+    return "pending";
+  };
+
+  /* =====================================================
+     PRIORITY CLASS
+     ===================================================== */
+
+  const getPriorityClass = (priority) => {
+    return priority
+      ? priority.toLowerCase()
+      : "low";
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#030712',
-      color: '#ffffff',
-      padding: '30px',
-      fontFamily: 'sans-serif'
-    }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, color: '#10b981' }}>
-            Admin Control Center
-          </h2>
-          <span style={{ fontSize: '12px', color: '#9ca3af', background: '#111827', padding: '6px 12px', borderRadius: '20px', border: '1px solid #1f2937' }}>
-            System Status: Live
-          </span>
+    <div className="admin-page">
+
+      {/* =================================================
+          PORTAL NAVBAR
+          ================================================= */}
+
+      <header className="admin-portal-navbar">
+
+        <div className="admin-nav-container">
+
+          {/* Brand */}
+
+          <Link to="/" className="admin-brand">
+
+            <div className="admin-logo">
+              C
+            </div>
+
+            <div className="admin-brand-text">
+
+              <span className="admin-brand-name">
+                CampusVoice
+              </span>
+
+              <span className="admin-brand-caption">
+                Campus concerns, properly heard.
+              </span>
+
+            </div>
+
+          </Link>
+
+
+          {/* Navigation */}
+
+          <nav className="admin-nav-links">
+
+            <Link to="/admin-dashboard">
+              Dashboard
+            </Link>
+
+            <a href="#complaints">
+              Complaints
+            </a>
+
+            <a href="#feedback">
+              Feedback
+            </a>
+
+          </nav>
+
+
+          {/* Right Side */}
+
+          <div className="admin-nav-actions">
+
+            <span className="admin-role">
+              ADMIN
+            </span>
+
+            <button
+              type="button"
+              className="admin-logout"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+
+          </div>
+
         </div>
 
-        {/* 5 Stats Cards Grid */}
-        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '28px' }}>
-          <div style={cardStyle}>
-            <p style={{ margin: 0, color: '#9ca3af', fontSize: '12px', fontWeight: 'bold' }}>TOTAL FEEDBACKS</p>
-            <h3 style={{ margin: '8px 0 0 0', fontSize: '26px', color: '#38bdf8' }}>{totalFeedbacks}</h3>
-          </div>
+      </header>
 
-          <div style={cardStyle}>
-            <p style={{ margin: 0, color: '#9ca3af', fontSize: '12px', fontWeight: 'bold' }}>AVG RATING</p>
-            <h3 style={{ margin: '8px 0 0 0', fontSize: '26px', color: '#fbbf24' }}>
-              {avgRating} <span style={{ fontSize: '14px', color: '#9ca3af' }}>/ 5</span>
-            </h3>
-          </div>
 
-          <div style={cardStyle}>
-            <p style={{ margin: 0, color: '#9ca3af', fontSize: '12px', fontWeight: 'bold' }}>TOTAL COMPLAINTS</p>
-            <h3 style={{ margin: '8px 0 0 0', fontSize: '26px', color: '#a855f7' }}>{totalComplaints}</h3>
-          </div>
+      {/* =================================================
+          MAIN CONTENT
+          ================================================= */}
 
-          <div style={cardStyle}>
-            <p style={{ margin: 0, color: '#9ca3af', fontSize: '12px', fontWeight: 'bold' }}>PENDING</p>
-            <h3 style={{ margin: '8px 0 0 0', fontSize: '26px', color: '#f87171' }}>{pendingComplaints}</h3>
-          </div>
+      <main className="admin-main">
 
-          <div style={cardStyle}>
-            <p style={{ margin: 0, color: '#9ca3af', fontSize: '12px', fontWeight: 'bold' }}>RESOLVED</p>
-            <h3 style={{ margin: '8px 0 0 0', fontSize: '26px', color: '#34d399' }}>{resolvedComplaints}</h3>
-          </div>
-        </div>
+        <div className="admin-container">
 
-        {/* Dynamic Tab Switcher */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #1f2937', paddingBottom: '10px' }}>
-          <button
-            onClick={() => setActiveTab('feedbacks')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: 'none',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              background: activeTab === 'feedbacks' ? '#10b981' : 'transparent',
-              color: activeTab === 'feedbacks' ? '#ffffff' : '#9ca3af'
-            }}
+
+          {/* =================================================
+              PAGE HEADER
+              ================================================= */}
+
+          <section className="admin-header">
+
+            <div>
+
+              <span className="admin-eyebrow">
+                CAMPUSVOICE ADMINISTRATION
+              </span>
+
+              <h1>
+                Admin Control Center
+              </h1>
+
+              <p>
+                Manage complaints, review feedback and monitor
+                campus activities.
+              </p>
+
+            </div>
+
+            <div className="system-status">
+
+              <span className="status-dot"></span>
+
+              System Status: Live
+
+            </div>
+
+          </section>
+
+
+          {/* =================================================
+              STATISTICS
+              ================================================= */}
+
+          <section className="admin-stats">
+
+            <div className="admin-stat-card">
+
+              <span>
+                TOTAL FEEDBACKS
+              </span>
+
+              <strong>
+                {totalFeedbacks}
+              </strong>
+
+            </div>
+
+
+            <div className="admin-stat-card">
+
+              <span>
+                AVERAGE RATING
+              </span>
+
+              <strong>
+                {avgRating}
+                <small> / 5</small>
+              </strong>
+
+            </div>
+
+
+            <div className="admin-stat-card">
+
+              <span>
+                TOTAL COMPLAINTS
+              </span>
+
+              <strong>
+                {totalComplaints}
+              </strong>
+
+            </div>
+
+
+            <div className="admin-stat-card">
+
+              <span>
+                PENDING
+              </span>
+
+              <strong>
+                {pendingComplaints}
+              </strong>
+
+            </div>
+
+
+            <div className="admin-stat-card">
+
+              <span>
+                RESOLVED
+              </span>
+
+              <strong>
+                {resolvedComplaints}
+              </strong>
+
+            </div>
+
+          </section>
+
+
+          {/* =================================================
+              TABS
+              ================================================= */}
+
+          <section
+            className="admin-content"
+            id="complaints"
           >
-            Feedbacks ({feedbacks.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('complaints')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: 'none',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              background: activeTab === 'complaints' ? '#10b981' : 'transparent',
-              color: activeTab === 'complaints' ? '#ffffff' : '#9ca3af'
-            }}
-          >
-            Complaints ({complaints.length})
-          </button>
-        </div>
 
-        {/* Feedbacks Content Panel */}
-        {activeTab === 'feedbacks' && (
-          <div style={{ background: '#111827', padding: '24px', borderRadius: '12px', border: '1px solid #1f2937' }}>
-            {feedbacks.length === 0 ? (
-              <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>No feedbacks submitted yet.</p>
-            ) : (
-              feedbacks.map((fb) => (
-                <div 
-                  key={fb.id} 
-                  style={{
-                    background: '#090d16',
-                    padding: '16px',
-                    borderRadius: '8px',
-                    marginBottom: '12px',
-                    border: '1px solid #1f2937'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '14px' }}>
-                      [{fb.category}] {'★'.repeat(fb.rating)} ({fb.rating}/5)
-                    </span>
-                    <small style={{ color: '#6b7280', fontSize: '12px' }}>{fb.date}</small>
-                  </div>
-                  <h4 style={{ margin: '4px 0 8px 0', fontSize: '15px', color: '#ffffff' }}>{fb.subject}</h4>
-                  <p style={{ margin: '0 0 10px 0', color: '#d1d5db', fontSize: '13px', fontStyle: 'italic' }}>
-                    "{fb.message}"
-                  </p>
-                  <div style={{ color: '#9ca3af', fontSize: '12px', borderTop: '1px dashed #1f2937', paddingTop: '8px' }}>
-                    Submitted By: <strong style={{ color: '#ffffff' }}>{fb.name}</strong> (ID: {fb.studentId})
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+            <div className="admin-tabs">
 
-        {/* Complaints Content Panel */}
-        {activeTab === 'complaints' && (
-          <div style={{ background: '#111827', padding: '24px', borderRadius: '12px', border: '1px solid #1f2937' }}>
-            {complaints.length === 0 ? (
-              <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>No complaints recorded.</p>
-            ) : (
-              complaints.map((cmp) => (
-                <div 
-                  key={cmp.id} 
-                  style={{
-                    background: '#090d16',
-                    padding: '16px',
-                    borderRadius: '8px',
-                    marginBottom: '12px',
-                    border: '1px solid #1f2937',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
+              <button
+                type="button"
+                className={
+                  activeTab === "complaints"
+                    ? "admin-tab active"
+                    : "admin-tab"
+                }
+                onClick={() =>
+                  setActiveTab("complaints")
+                }
+              >
+                Complaints ({totalComplaints})
+              </button>
+
+
+              <button
+                type="button"
+                className={
+                  activeTab === "feedbacks"
+                    ? "admin-tab active"
+                    : "admin-tab"
+                }
+                onClick={() =>
+                  setActiveTab("feedbacks")
+                }
+              >
+                Feedbacks ({totalFeedbacks})
+              </button>
+
+            </div>
+
+
+            {/* =================================================
+                COMPLAINT PANEL
+                ================================================= */}
+
+            {activeTab === "complaints" && (
+
+              <div className="admin-panel">
+
+                <div className="panel-heading">
+
                   <div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold' }}>{cmp.id}</span>
-                      <span style={{ fontSize: '11px', background: '#1f2937', padding: '2px 8px', borderRadius: '4px', color: '#d1d5db' }}>{cmp.category}</span>
+
+                    <h2>
+                      Complaint Management
+                    </h2>
+
+                    <p>
+                      Review and monitor complaints submitted
+                      by students.
+                    </p>
+
+                  </div>
+
+                  <span className="panel-count">
+                    {totalComplaints} Records
+                  </span>
+
+                </div>
+
+
+                {complaints.length === 0 ? (
+
+                  <div className="empty-state">
+
+                    <h3>
+                      No complaints recorded
+                    </h3>
+
+                    <p>
+                      Student complaints will appear here.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  <div className="complaint-list">
+
+                    {complaints.map((complaint) => (
+
+                      <div
+                        className="admin-complaint-card"
+                        key={complaint.id}
+                      >
+
+                        <div className="complaint-information">
+
+                          <div className="complaint-meta">
+
+                            <span className="complaint-id">
+                              {complaint.id}
+                            </span>
+
+                            <span className="complaint-category">
+                              {complaint.category}
+                            </span>
+
+                          </div>
+
+
+                          <h3>
+                            {complaint.title}
+                          </h3>
+
+
+                          <small>
+                            Submitted on {complaint.date}
+                          </small>
+
+                        </div>
+
+
+                        <div className="complaint-status-area">
+
+                          <span
+                            className={`admin-priority ${getPriorityClass(
+                              complaint.priority
+                            )}`}
+                          >
+                            {complaint.priority || "Low"}
+                          </span>
+
+
+                          <span
+                            className={`admin-status ${getStatusClass(
+                              complaint.status
+                            )}`}
+                          >
+                            {complaint.status}
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                FEEDBACK PANEL
+                ================================================= */}
+
+            {activeTab === "feedbacks" && (
+
+              <div
+                className="admin-panel"
+                id="feedback"
+              >
+
+                <div className="panel-heading">
+
+                  <div>
+
+                    <h2>
+                      Submitted Feedback
+                    </h2>
+
+                    <p>
+                      Review feedback submitted by students.
+                    </p>
+
+                  </div>
+
+                  <span className="panel-count">
+                    {totalFeedbacks} Records
+                  </span>
+
+                </div>
+
+
+                {feedbacks.length === 0 ? (
+
+                  <div className="empty-state">
+
+                    <div className="empty-icon">
+                      ✓
                     </div>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#ffffff' }}>{cmp.title}</h4>
-                    <small style={{ color: '#6b7280' }}>Date: {cmp.date}</small>
+
+                    <h3>
+                      No feedbacks submitted yet
+                    </h3>
+
+                    <p>
+                      Student feedback will appear here once
+                      submitted.
+                    </p>
+
                   </div>
 
-                  <div>
-                    <span style={{
-                      padding: '4px 10px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      background: cmp.status === 'Resolved' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(248, 113, 113, 0.15)',
-                      color: cmp.status === 'Resolved' ? '#34d399' : '#f87171',
-                      border: `1px solid ${cmp.status === 'Resolved' ? '#34d399' : '#f87171'}`
-                    }}>
-                      {cmp.status}
-                    </span>
+                ) : (
+
+                  <div className="feedback-list">
+
+                    {feedbacks.map((feedback, index) => (
+
+                      <div
+                        className="feedback-card"
+                        key={feedback.id || index}
+                      >
+
+                        <div className="feedback-top">
+
+                          <div>
+
+                            <span className="feedback-category">
+                              {feedback.category || "General"}
+                            </span>
+
+                            <span className="feedback-rating">
+                              {"★".repeat(
+                                Number(feedback.rating || 0)
+                              )}
+
+                              <span>
+                                {" "}
+                                ({feedback.rating || 0}/5)
+                              </span>
+                            </span>
+
+                          </div>
+
+                          <small>
+                            {feedback.date || "Recently"}
+                          </small>
+
+                        </div>
+
+
+                        <h3>
+                          {feedback.subject ||
+                            "Student Feedback"}
+                        </h3>
+
+
+                        <p className="feedback-message">
+                          "{feedback.message || "No message provided."}"
+                        </p>
+
+
+                        <div className="feedback-user">
+
+                          Submitted By:{" "}
+
+                          <strong>
+                            {feedback.name || "Student"}
+                          </strong>
+
+                          {feedback.studentId && (
+                            <>
+                              {" "}
+                              (ID: {feedback.studentId})
+                            </>
+                          )}
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
                   </div>
-                </div>
-              ))
+
+                )}
+
+              </div>
+
             )}
-          </div>
-        )}
 
-      </div>
+          </section>
+
+
+          {/* =================================================
+              ADMIN INFORMATION
+              ================================================= */}
+
+          <section className="admin-bottom-card">
+
+            <div>
+
+              <span className="admin-eyebrow">
+                CAMPUSVOICE ADMINISTRATION
+              </span>
+
+              <h2>
+                Keep campus concerns organized.
+              </h2>
+
+              <p>
+                Monitor complaints, review feedback and ensure
+                submitted concerns reach the appropriate
+                administrative team.
+              </p>
+
+            </div>
+
+
+            <Link
+              to="/"
+              className="admin-home-button"
+            >
+              ← Back to Home
+            </Link>
+
+          </section>
+
+
+        </div>
+
+      </main>
+
     </div>
   );
-};
+}
 
 export default AdminDashboard;

@@ -17,72 +17,45 @@ import StaffDashboard from "./pages/StaffDashboard";
 import GuestComplaint from "./pages/GuestComplaint";
 import TrackComplaint from "./pages/TrackComplaint";
 
+import Feedback from "./pages/Feedback";
+import MyComplaints from "./pages/MyComplaints";
+import AdminFeedback from "./pages/AdminFeedback";
+
 function App() {
   return (
     <Router>
-
       <Routes>
-
         {/* Home */}
-        <Route
-          path="/"
-          element={<Home />}
-        />
+        <Route path="/" element={<Home />} />
 
         {/* Authentication */}
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* About */}
-        <Route
-          path="/about"
-          element={<About />}
-        />
+        <Route path="/about" element={<About />} />
 
         {/* Complaint Management */}
-        <Route
-          path="/submit-complaint"
-          element={<GuestComplaint />}
-        />
+        <Route path="/submit-complaint" element={<GuestComplaint />} />
+        <Route path="/track-complaint" element={<TrackComplaint />} />
 
-        <Route
-          path="/track-complaint"
-          element={<TrackComplaint />}
-        />
-
-        {/* Student Portal */}
-        <Route
-          path="/student-dashboard"
-          element={<StudentDashboard />}
-        />
+        {/* Student Portal & Feedback */}
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/my-complaints" element={<MyComplaints />} />
+        <Route path="/feedback" element={<Feedback />} />
 
         {/* Staff Portal */}
-        <Route
-          path="/staff-dashboard"
-          element={<StaffDashboard />}
-        />
+        <Route path="/staff-dashboard" element={<StaffDashboard />} />
 
-        {/* Admin Portal */}
-        <Route
-          path="/admin-dashboard"
-          element={<AdminDashboard />}
-        />
+        {/* Admin Portal & Analytics */}
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/feedback" element={<AdminFeedback />} />
+        <Route path="/admin-feedback" element={<AdminFeedback />} />
 
         {/* Fallback */}
-        <Route
-          path="*"
-          element={<Navigate to="/" replace />}
-        />
-
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-
     </Router>
   );
 }

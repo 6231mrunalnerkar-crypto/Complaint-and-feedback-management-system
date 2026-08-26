@@ -4,142 +4,83 @@ import { getStoredComplaints } from '../utils/mockData';
 
 const TrackComplaint = () => {
   const [searchParams] = useSearchParams();
-  const [searchId, setSearchId] = useState('');
+  const [searchId, setSearchId] = useState(searchParams.get('id') || '');
   const [complaint, setComplaint] = useState(null);
   const [searched, setSearched] = useState(false);
 
-  const handleSearch = (queryId) => {
-    const targetId = (queryId || searchId).trim();
-    if (!targetId) return;
-    
-    setSearched(true);
-    const complaints = getStoredComplaints();
-    const found = complaints.find(c => c.id.toLowerCase() === targetId.toLowerCase());
-    setComplaint(found || null);
-  };
-
   useEffect(() => {
-    const idFromUrl = searchParams.get('id');
-    if (idFromUrl) {
-      setSearchId(idFromUrl);
-      handleSearch(idFromUrl);
+    const queryId = searchParams.get('id');
+    if (queryId) {
+      handleSearch(queryId);
     }
   }, [searchParams]);
 
-  const stages = ['Submitted', 'Under Review', 'In Progress', 'Resolved'];
+  const handleSearch = (idToSearch) => {
+    const id = idToSearch || searchId;
+    if (!id) return;
 
-  const getActiveStageIndex = (status) => {
-    switch (status) {
-      case 'Pending': return 0;
-      case 'Under Review': return 1;
-      case 'In Progress': return 2;
-      case 'Resolved': return 3;
-      default: return 0;
-    }
+    const complaints = getStoredComplaints();
+    const found = complaints.find(
+      (c) => c.id.toLowerCase() === id.trim().toLowerCase()
+    );
+
+    setComplaint(found || null);
+    setSearched(true);
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#030712', color: '#ffffff', padding: '40px 20px', fontFamily: 'sans-serif', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-      <div style={{ width: '100%', maxWidth: '700px' }}>
-        
-        {/* Search Header */}
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', padding: '28px', borderRadius: '16px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 6px 0', color: '#10b981' }}>Track Your Complaint</h2>
-          <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 20px 0' }}>Enter your Reference ID to inspect live resolution status.</p>
+    <div style={{ minHeight: 'calc(100vh - 64px)', backgroundColor: '#030712', color: '#ffffff', padding: '32px 20px', fontFamily: 'sans-serif' }}>
+      <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px' }}>Track Complaint Status</h1>
+        <p style={{ color: '#9ca3af', marginBottom: '24px', fontSize: '14px' }}>Enter your Reference ID below to check the real-time resolution status.</p>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} style={{ display: 'flex', gap: '10px' }}>
-            <input
-              type="text"
-              placeholder="e.g. CFMS-2026-00125"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              style={{ flex: 1, padding: '12px', background: '#090d16', border: '1px solid #1f2937', color: '#ffffff', borderRadius: '8px', outline: 'none', fontSize: '14px' }}
-            />
-            <button type="submit" style={{ padding: '12px 24px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
-              Track
-            </button>
-          </form>
+        {/* Search Bar */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '32px' }}>
+          <input
+            type="text"
+            placeholder="e.g. CFMS-2026-001"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            style={{ flex: 1, padding: '12px 16px', background: '#111827', border: '1px solid #374151', color: '#ffffff', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+          />
+          <button
+            onClick={() => handleSearch()}
+            style={{ padding: '12px 24px', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Track Status
+          </button>
         </div>
 
-        {/* Search Result */}
+        {/* Search Results */}
         {searched && (
           complaint ? (
-            <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', padding: '28px', borderRadius: '16px' }}>
-              
-              {/* Status Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #1f2937', paddingBottom: '16px', marginBottom: '20px' }}>
-                <div>
-                  <span style={{ fontSize: '12px', color: '#38bdf8', fontWeight: 'bold' }}>{complaint.id}</span>
-                  <h3 style={{ fontSize: '18px', margin: '4px 0 0 0', color: '#ffffff' }}>{complaint.subject}</h3>
-                </div>
-                <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid #10b981' }}>
-                  {complaint.status}
+            <div style={{ background: '#111827', border: '1px solid #1f2937', padding: '24px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{complaint.id}</span>
+                <span style={{
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  background: complaint.status === 'Resolved' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(250, 204, 21, 0.15)',
+                  color: complaint.status === 'Resolved' ? '#10b981' : '#facc15',
+                  border: complaint.status === 'Resolved' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(250, 204, 21, 0.3)'
+                }}>
+                  ● {complaint.status}
                 </span>
               </div>
 
-              {/* Status Timeline Visualiser */}
-              <div style={{ marginBottom: '28px', background: '#090d16', padding: '20px', borderRadius: '12px', border: '1px solid #1f2937' }}>
-                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 'bold', display: 'block', marginBottom: '16px' }}>TIMELINE PROGRESS</span>
-                <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
-                  {stages.map((stage, idx) => {
-                    const currentIdx = getActiveStageIndex(complaint.status);
-                    const isPassed = idx <= currentIdx;
-                    return (
-                      <div key={stage} style={{ flex: 1, textAlign: 'center', position: 'relative', zIndex: 2 }}>
-                        <div style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '50%',
-                          background: isPassed ? '#10b981' : '#1f2937',
-                          color: isPassed ? '#ffffff' : '#6b7280',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 8px auto',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          boxShadow: isPassed ? '0 0 10px rgba(16, 185, 129, 0.5)' : 'none'
-                        }}>
-                          {isPassed ? '✓' : idx + 1}
-                        </div>
-                        <span style={{ fontSize: '11px', color: isPassed ? '#ffffff' : '#6b7280', fontWeight: isPassed ? '600' : 'normal' }}>
-                          {stage}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>{complaint.subject}</h2>
+              <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '16px' }}>{complaint.description}</p>
 
-              {/* Detailed Breakdown */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px', background: '#090d16', padding: '14px', borderRadius: '8px' }}>
-                <div>
-                  <small style={{ color: '#6b7280', display: 'block', fontSize: '11px' }}>CATEGORY</small>
-                  <span style={{ fontSize: '13px', color: '#d1d5db', fontWeight: 'bold' }}>{complaint.category}</span>
-                </div>
-                <div>
-                  <small style={{ color: '#6b7280', display: 'block', fontSize: '11px' }}>PRIORITY</small>
-                  <span style={{ fontSize: '13px', color: complaint.priority === 'High' || complaint.priority === 'Urgent' ? '#f87171' : '#fbbf24', fontWeight: 'bold' }}>{complaint.priority}</span>
-                </div>
-                <div>
-                  <small style={{ color: '#6b7280', display: 'block', fontSize: '11px' }}>DATE SUBMITTED</small>
-                  <span style={{ fontSize: '13px', color: '#d1d5db' }}>{complaint.date}</span>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: '#090d16', padding: '16px', borderRadius: '8px', fontSize: '13px', color: '#9ca3af' }}>
+                <div><strong>Category:</strong> {complaint.category}</div>
+                <div><strong>Submitted On:</strong> {complaint.date || 'Recent'}</div>
               </div>
-
-              <div>
-                <small style={{ color: '#6b7280', display: 'block', fontSize: '11px', marginBottom: '4px' }}>DESCRIPTION</small>
-                <p style={{ margin: 0, color: '#9ca3af', fontSize: '13px', lineHeight: '1.5', background: '#090d16', padding: '12px', borderRadius: '8px' }}>
-                  "{complaint.description}"
-                </p>
-              </div>
-
             </div>
           ) : (
-            <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', padding: '32px', borderRadius: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '40px', marginBottom: '10px' }}>🔍</div>
-              <h3 style={{ color: '#f87171', margin: '0 0 6px 0', fontSize: '18px' }}>Complaint Not Found</h3>
-              <p style={{ color: '#9ca3af', fontSize: '13px', margin: 0 }}>Please check your Reference ID and try again.</p>
+            <div style={{ background: '#111827', border: '1px solid #1f2937', padding: '32px', borderRadius: '12px', textAlign: 'center' }}>
+              <p style={{ color: '#ef4444', fontWeight: 'bold', margin: 0 }}>No complaint found with ID: "{searchId}"</p>
             </div>
           )
         )}

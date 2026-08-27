@@ -20,41 +20,109 @@ import TrackComplaint from "./pages/TrackComplaint";
 import Feedback from "./pages/Feedback";
 import MyComplaints from "./pages/MyComplaints";
 import AdminFeedback from "./pages/AdminFeedback";
+import GuestDashboard from "./pages/GuestDashboard";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Home */}
-        <Route path="/" element={<Home />} />
 
-        {/* Authentication */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* ================= HOME ================= */}
 
-        {/* About */}
-        <Route path="/about" element={<About />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-        {/* Complaint Management */}
-        <Route path="/submit-complaint" element={<GuestComplaint />} />
-        <Route path="/track-complaint" element={<TrackComplaint />} />
+        {/* ================= AUTHENTICATION ================= */}
 
-        {/* Student Portal & Feedback */}
-        <Route path="/student-dashboard" element={<StudentDashboard />} />
-        <Route path="/my-complaints" element={<MyComplaints />} />
-        <Route path="/feedback" element={<Feedback />} />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        {/* Staff Portal */}
-        <Route path="/staff-dashboard" element={<StaffDashboard />} />
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
-        {/* Admin Portal & Analytics */}
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/feedback" element={<AdminFeedback />} />
-        <Route path="/admin-feedback" element={<AdminFeedback />} />
+        {/* ================= ABOUT ================= */}
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/about"
+          element={<About />}
+        />
+
+        {/* ================= GUEST / PUBLIC ================= */}
+
+        <Route
+          path="/submit-complaint"
+          element={<GuestComplaint />}
+        />
+
+        <Route
+          path="/track-complaint"
+          element={<TrackComplaint />}
+        />
+
+        <Route
+          path="/feedback"
+          element={<Feedback />}
+        />
+
+        {/* ================= STUDENT ================= */}
+
+        <Route
+          path="/student-dashboard"
+          element={<StudentDashboard />}
+        />
+
+        <Route
+          path="/my-complaints"
+          element={<MyComplaints />}
+        />
+
+        {/* ================= STAFF ================= */}
+
+        <Route
+          path="/staff-dashboard"
+          element={<StaffDashboard />}
+        />
+
+        {/* ================= ADMIN ================= */}
+
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard />}
+        />
+
+        <Route
+          path="/admin/dashboard"
+          element={<AdminDashboard />}
+        />
+
+        <Route
+          path="/admin/feedback"
+          element={<AdminFeedback />}
+        />
+
+        <Route
+          path="/admin-feedback"
+          element={<AdminFeedback />}
+        />
+
+        <Route
+          path="/guest-dashboard"
+          element={<GuestDashboard />}
+        />
+
+        {/* ================= FALLBACK ================= */}
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+
       </Routes>
     </Router>
   );

@@ -14,8 +14,11 @@ function Hero() {
     const handleMouseMove = (event) => {
       const rect = hero.getBoundingClientRect();
 
-      const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
-      const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+      const x =
+        ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+
+      const y =
+        ((event.clientY - rect.top) / rect.height - 0.5) * 2;
 
       hero.style.setProperty("--mouse-x", `${x}`);
       hero.style.setProperty("--mouse-y", `${y}`);
@@ -45,6 +48,7 @@ function Hero() {
 
   return (
     <section className="hero" id="home" ref={heroRef}>
+
       <div className="hero-grid"></div>
 
       <div className="hero-glow hero-glow-one"></div>
@@ -52,13 +56,22 @@ function Hero() {
 
       <div className="hero-container">
 
+        {/* LEFT SIDE */}
         <div className="hero-content scroll-reveal">
 
           <div className="hero-marquee">
             <div className="hero-marquee-track">
-              <span>COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM</span>
-              <span>COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM</span>
-              <span>COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM</span>
+              <span>
+                COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM
+              </span>
+
+              <span>
+                COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM
+              </span>
+
+              <span>
+                COMPLAINT AND FEEDBACK MANAGEMENT SYSTEM
+              </span>
             </div>
           </div>
 
@@ -73,14 +86,15 @@ function Hero() {
           </p>
 
           <p className="hero-description">
-            CampusVoice gives students a simple and transparent way to
-            report complaints, share feedback, track progress and stay
-            informed throughout the resolution process.
+            CampusVoice gives students a simple and transparent
+            way to report complaints, share feedback, track
+            progress and stay informed throughout the
+            resolution process.
           </p>
 
           <div className="hero-buttons">
 
-            {/* Submit Complaint → Login → Complaint Form */}
+            {/* Submit Complaint → Login → Complaint Page */}
             <button
               type="button"
               onClick={handleSubmitComplaint}
@@ -89,6 +103,7 @@ function Hero() {
               Submit a Complaint
             </button>
 
+            {/* Track Complaint */}
             <a
               href="#complaint-tracker"
               className="hero-secondary-btn"
@@ -100,6 +115,7 @@ function Hero() {
 
         </div>
 
+        {/* RIGHT SIDE */}
         <div className="hero-auth-card scroll-reveal reveal-delay-2">
 
           <span className="auth-card-label">
@@ -134,13 +150,14 @@ function Hero() {
           </div>
 
           <div className="auth-card-footer">
-            Your account keeps complaints and feedback organized
-            in one place.
+            Your account keeps complaints and feedback
+            organized in one place.
           </div>
 
         </div>
 
       </div>
+
     </section>
   );
 }

@@ -7,42 +7,28 @@ const Navbar = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // =====================================================
-  // THEME
-  // =====================================================
-
   const [theme, setTheme] = useState(
     localStorage.getItem("cfms-theme") || "light"
   );
 
-  // =====================================================
-  // ROLE
-  // =====================================================
-
-  const role =
-    localStorage.getItem("userRole") || "guest";
+  const role = localStorage.getItem("userRole") || "guest";
 
   // =====================================================
-  // THEME TOGGLE
+  // THEME
   // =====================================================
 
   const toggleTheme = () => {
-    const newTheme =
-      theme === "light" ? "dark" : "light";
+    const newTheme = theme === "light" ? "dark" : "light";
 
     setTheme(newTheme);
 
-    localStorage.setItem(
-      "cfms-theme",
-      newTheme
-    );
+    localStorage.setItem("cfms-theme", newTheme);
 
     document.documentElement.setAttribute(
       "data-theme",
       newTheme
     );
 
-    // Notify other components/pages
     window.dispatchEvent(
       new Event("cfms-theme-change")
     );
@@ -58,9 +44,7 @@ const Navbar = () => {
 
     setMobileMenuOpen(false);
 
-    toast.success(
-      "Logged out successfully"
-    );
+    toast.success("Logged out successfully");
 
     navigate("/");
   };
@@ -78,21 +62,17 @@ const Navbar = () => {
   // =====================================================
 
   const navLinkStyle = ({ isActive }) => ({
-    color: isActive
-      ? "#34d399"
-      : "#d1fae5",
+    color: isActive ? "#34d399" : "#d1fae5",
 
     textDecoration: "none",
 
-    fontWeight: isActive
-      ? "700"
-      : "500",
+    fontWeight: isActive ? "700" : "500",
 
     fontSize: "14px",
 
     padding: "8px 12px",
 
-    borderRadius: "6px",
+    borderRadius: "7px",
 
     transition: "all 0.2s ease",
 
@@ -110,17 +90,15 @@ const Navbar = () => {
   const logoutStyle = {
     marginLeft: "8px",
 
-    background:
-      "rgba(239, 68, 68, 0.10)",
+    background: "rgba(239, 68, 68, 0.10)",
 
     color: "#fca5a5",
 
-    border:
-      "1px solid rgba(239, 68, 68, 0.35)",
+    border: "1px solid rgba(239, 68, 68, 0.35)",
 
     padding: "7px 14px",
 
-    borderRadius: "6px",
+    borderRadius: "7px",
 
     fontSize: "13px",
 
@@ -129,8 +107,6 @@ const Navbar = () => {
     cursor: "pointer",
 
     whiteSpace: "nowrap",
-
-    transition: "all 0.2s ease",
   };
 
   // =====================================================
@@ -146,18 +122,15 @@ const Navbar = () => {
 
     justifyContent: "center",
 
-    gap: "6px",
-
     background: "#065f46",
 
     color: "#d1fae5",
 
-    border:
-      "1px solid #047857",
+    border: "1px solid #047857",
 
-    padding: "7px 11px",
+    padding: "7px 13px",
 
-    borderRadius: "6px",
+    borderRadius: "7px",
 
     fontSize: "13px",
 
@@ -172,39 +145,25 @@ const Navbar = () => {
     flexShrink: 0,
   };
 
-  // =====================================================
-  // RETURN
-  // =====================================================
-
   return (
     <nav className="cfms-navbar">
 
-      {/* =================================================
-          NAVBAR CONTAINER
-      ================================================= */}
-
       <div className="navbar-container">
 
-        {/* =================================================
-            BRAND
-        ================================================= */}
+        {/* BRAND */}
 
         <NavLink
           to="/"
           onClick={handleNavigation}
           className="cfms-brand"
         >
-          <span>CFMS</span>
-          <strong>Portal</strong>
+          <span>Campus</span>
+          <strong>Voice</strong>
         </NavLink>
 
-        {/* =================================================
-            DESKTOP MENU
-        ================================================= */}
+        {/* DESKTOP MENU */}
 
         <div className="desktop-menu">
-
-          {/* HOME */}
 
           <NavLink
             to="/"
@@ -214,17 +173,15 @@ const Navbar = () => {
             Home
           </NavLink>
 
-          {/* LODGE COMPLAINT */}
+          {/* CHANGED FROM LODGE COMPLAINT */}
 
           <NavLink
             to="/submit-complaint"
             style={navLinkStyle}
             onClick={handleNavigation}
           >
-            Lodge Complaint
+            Anonymous Complaint
           </NavLink>
-
-          {/* TRACK COMPLAINT */}
 
           <NavLink
             to="/track-complaint"
@@ -234,19 +191,15 @@ const Navbar = () => {
             Track Complaint
           </NavLink>
 
-          {/* FEEDBACK */}
-
           <NavLink
             to="/feedback"
             style={navLinkStyle}
             onClick={handleNavigation}
           >
-            Feedback
+            Anonymous Feedback
           </NavLink>
 
-          {/* =================================================
-              ADMIN
-          ================================================= */}
+          {/* ADMIN */}
 
           {role === "admin" && (
             <>
@@ -268,9 +221,7 @@ const Navbar = () => {
             </>
           )}
 
-          {/* =================================================
-              STUDENT
-          ================================================= */}
+          {/* STUDENT */}
 
           {role === "student" && (
             <>
@@ -292,9 +243,7 @@ const Navbar = () => {
             </>
           )}
 
-          {/* =================================================
-              STAFF
-          ================================================= */}
+          {/* STAFF */}
 
           {role === "staff" && (
             <NavLink
@@ -306,38 +255,17 @@ const Navbar = () => {
             </NavLink>
           )}
 
-          {/* =================================================
-              THEME
-          ================================================= */}
+          {/* THEME */}
 
           <button
             type="button"
             onClick={toggleTheme}
             style={themeButtonStyle}
-            title={
-              theme === "light"
-                ? "Switch to dark mode"
-                : "Switch to light mode"
-            }
           >
-            <span>
-              {theme === "light"
-                ? "🌙"
-                : "☀️"}
-            </span>
-
-            <span>
-              {theme === "light"
-                ? "Dark"
-                : "Light"}
-            </span>
+            {theme === "light" ? "Dark" : "Light"}
           </button>
 
-          {/* =================================================
-              LOGOUT
-
-              Login button intentionally removed.
-          ================================================= */}
+          {/* LOGOUT */}
 
           {role !== "guest" && (
             <button
@@ -348,38 +276,27 @@ const Navbar = () => {
               Logout
             </button>
           )}
-
         </div>
 
-        {/* =================================================
-            MOBILE MENU BUTTON
-        ================================================= */}
+        {/* MOBILE BUTTON */}
 
         <button
           type="button"
           className="mobile-toggle"
           onClick={() =>
-            setMobileMenuOpen(
-              (previous) => !previous
-            )
+            setMobileMenuOpen((previous) => !previous)
           }
           aria-label="Toggle navigation"
         >
-          {mobileMenuOpen
-            ? "✕"
-            : "☰"}
+          {mobileMenuOpen ? "Close" : "Menu"}
         </button>
 
       </div>
 
-      {/* =====================================================
-          MOBILE MENU
-      ===================================================== */}
+      {/* MOBILE MENU */}
 
       {mobileMenuOpen && (
         <div className="mobile-menu">
-
-          {/* HOME */}
 
           <NavLink
             to="/"
@@ -389,17 +306,13 @@ const Navbar = () => {
             Home
           </NavLink>
 
-          {/* LODGE COMPLAINT */}
-
           <NavLink
             to="/submit-complaint"
             onClick={handleNavigation}
             style={navLinkStyle}
           >
-            Lodge Complaint
+            Anonymous Complaint
           </NavLink>
-
-          {/* TRACK COMPLAINT */}
 
           <NavLink
             to="/track-complaint"
@@ -409,19 +322,13 @@ const Navbar = () => {
             Track Complaint
           </NavLink>
 
-          {/* FEEDBACK */}
-
           <NavLink
             to="/feedback"
             onClick={handleNavigation}
             style={navLinkStyle}
           >
-            Feedback
+            Anonymous Feedback
           </NavLink>
-
-          {/* =================================================
-              MOBILE ADMIN
-          ================================================= */}
 
           {role === "admin" && (
             <>
@@ -443,10 +350,6 @@ const Navbar = () => {
             </>
           )}
 
-          {/* =================================================
-              MOBILE STUDENT
-          ================================================= */}
-
           {role === "student" && (
             <>
               <NavLink
@@ -467,10 +370,6 @@ const Navbar = () => {
             </>
           )}
 
-          {/* =================================================
-              MOBILE STAFF
-          ================================================= */}
-
           {role === "staff" && (
             <NavLink
               to="/staff-dashboard"
@@ -481,25 +380,15 @@ const Navbar = () => {
             </NavLink>
           )}
 
-          {/* =================================================
-              MOBILE THEME
-          ================================================= */}
-
           <button
             type="button"
             onClick={toggleTheme}
             className="mobile-theme-button"
           >
             {theme === "light"
-              ? "🌙  Switch to Dark Mode"
-              : "☀️  Switch to Light Mode"}
+              ? "Switch to Dark Mode"
+              : "Switch to Light Mode"}
           </button>
-
-          {/* =================================================
-              MOBILE LOGOUT
-
-              No Login button.
-          ================================================= */}
 
           {role !== "guest" && (
             <button
@@ -514,10 +403,6 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* =====================================================
-          NAVBAR CSS
-      ===================================================== */}
-
       <style>{`
 
         .cfms-navbar {
@@ -527,50 +412,33 @@ const Navbar = () => {
           position: sticky;
           top: 0;
           z-index: 1000;
-          transition: all 0.25s ease;
         }
-
-        /* =================================================
-           CONTAINER
-        ================================================= */
 
         .navbar-container {
           width: 100%;
           max-width: 1400px;
           height: 64px;
           margin: 0 auto;
-
           padding: 0 20px;
-
           box-sizing: border-box;
 
           display: flex;
           align-items: center;
           justify-content: space-between;
-
           gap: 16px;
         }
-
-        /* =================================================
-           BRAND
-        ================================================= */
 
         .cfms-brand {
           display: flex;
           align-items: center;
-
           gap: 7px;
 
           color: #ffffff;
-
           text-decoration: none;
 
           font-size: 18px;
-
           font-weight: 700;
-
           white-space: nowrap;
-
           flex-shrink: 0;
         }
 
@@ -582,21 +450,12 @@ const Navbar = () => {
           color: #ffffff;
         }
 
-        /* =================================================
-           DESKTOP MENU
-        ================================================= */
-
         .desktop-menu {
           display: flex;
-
           align-items: center;
-
           justify-content: flex-end;
-
           gap: 3px;
-
           flex: 1;
-
           min-width: 0;
         }
 
@@ -606,141 +465,75 @@ const Navbar = () => {
 
         .desktop-menu a:hover {
           color: #ffffff !important;
-
-          background:
-            rgba(52, 211, 153, 0.15);
+          background: rgba(52, 211, 153, 0.15);
         }
 
         .desktop-menu a[aria-current="page"] {
           color: #34d399 !important;
-
-          background:
-            rgba(52, 211, 153, 0.12);
+          background: rgba(52, 211, 153, 0.12);
         }
-
-        /* =================================================
-           MOBILE TOGGLE
-        ================================================= */
 
         .mobile-toggle {
           display: none;
 
           background: transparent;
-
-          border: none;
-
+          border: 1px solid #047857;
           color: #ffffff;
 
-          font-size: 24px;
+          padding: 7px 12px;
+          border-radius: 7px;
 
+          font-size: 13px;
           cursor: pointer;
-
-          padding: 4px;
         }
-
-        /* =================================================
-           MOBILE MENU
-        ================================================= */
 
         .mobile-menu {
           display: none;
         }
 
-        /* =================================================
-           MOBILE THEME
-        ================================================= */
-
-        .mobile-theme-button {
+        .mobile-theme-button,
+        .mobile-logout-button {
           width: 100%;
-
           margin-top: 8px;
-
           padding: 10px 12px;
 
-          background: #065f46;
-
-          color: #d1fae5;
-
-          border: 1px solid #047857;
-
-          border-radius: 6px;
-
+          border-radius: 7px;
           font-size: 13px;
-
           font-weight: 600;
 
           cursor: pointer;
-
           text-align: left;
-
-          transition: all 0.2s ease;
         }
 
-        .mobile-theme-button:hover {
-          background: #047857;
-          color: #ffffff;
+        .mobile-theme-button {
+          background: #065f46;
+          color: #d1fae5;
+          border: 1px solid #047857;
         }
-
-        /* =================================================
-           MOBILE LOGOUT
-        ================================================= */
 
         .mobile-logout-button {
-          width: 100%;
-
-          margin-top: 8px;
-
-          padding: 10px;
-
-          background:
-            rgba(239, 68, 68, 0.08);
-
+          background: rgba(239, 68, 68, 0.08);
           color: #fca5a5;
-
-          border:
-            1px solid rgba(239, 68, 68, 0.35);
-
-          border-radius: 6px;
-
-          font-size: 13px;
-
-          font-weight: 700;
-
-          cursor: pointer;
-
-          text-align: left;
+          border: 1px solid rgba(239, 68, 68, 0.35);
         }
 
-        /* =================================================
-           TABLET
-        ================================================= */
-
         @media (max-width: 1150px) {
-
           .desktop-menu {
             gap: 1px;
           }
 
           .desktop-menu a {
             font-size: 12px;
-
             padding: 7px 7px;
           }
 
           .desktop-menu button {
             font-size: 12px;
-
             padding: 7px 8px;
           }
-
         }
 
-        /* =================================================
-           MOBILE
-        ================================================= */
-
         @media (max-width: 950px) {
-
           .desktop-menu {
             display: none;
           }
@@ -751,47 +544,29 @@ const Navbar = () => {
 
           .mobile-menu {
             display: flex;
-
             flex-direction: column;
-
             gap: 5px;
 
-            padding:
-              15px 20px 20px;
+            padding: 15px 20px 20px;
 
             background: #064e3b;
 
-            border-top:
-              1px solid #047857;
-
-            border-bottom:
-              1px solid #047857;
+            border-top: 1px solid #047857;
+            border-bottom: 1px solid #047857;
           }
 
           .navbar-container {
             height: 60px;
           }
-
         }
 
-        /* =================================================
-           DESKTOP ONLY
-        ================================================= */
-
         @media (min-width: 951px) {
-
           .mobile-menu {
             display: none !important;
           }
-
         }
 
-        /* =================================================
-           SMALL MOBILE
-        ================================================= */
-
         @media (max-width: 500px) {
-
           .navbar-container {
             padding: 0 15px;
           }
@@ -799,7 +574,6 @@ const Navbar = () => {
           .cfms-brand {
             font-size: 16px;
           }
-
         }
 
       `}</style>

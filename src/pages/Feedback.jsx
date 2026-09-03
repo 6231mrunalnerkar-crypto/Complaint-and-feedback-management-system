@@ -1,24 +1,40 @@
 import { useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import {
+  useSearchParams,
+  useNavigate,
+} from "react-router-dom";
+
 import toast from "react-hot-toast";
+
+import Navbar from "../components/Navbar";
 
 import {
   saveFeedback,
   hasSubmittedFeedback,
 } from "../utils/feedbackData";
 
-import { getStoredComplaints } from "../utils/mockData";
+import {
+  getStoredComplaints,
+} from "../utils/mockData";
 
 const Feedback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const initialId = searchParams.get("id") || "";
+  const initialId =
+    searchParams.get("id") || "";
 
-  const [complaintId, setComplaintId] = useState(initialId);
-  const [rating, setRating] = useState(5);
-  const [category, setCategory] = useState("General");
-  const [comment, setComment] = useState("");
+  const [complaintId, setComplaintId] =
+    useState(initialId);
+
+  const [rating, setRating] =
+    useState(5);
+
+  const [category, setCategory] =
+    useState("General");
+
+  const [comment, setComment] =
+    useState("");
 
   const [verificationMessage, setVerificationMessage] =
     useState("");
@@ -26,7 +42,8 @@ const Feedback = () => {
   const [verificationType, setVerificationType] =
     useState("");
 
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] =
+    useState(false);
 
   // =====================================================
   // VERIFY COMPLAINT
@@ -38,13 +55,16 @@ const Feedback = () => {
     if (!cleanId) {
       setIsVerified(false);
       setVerificationType("error");
+
       setVerificationMessage(
         "Please enter your Complaint Reference ID."
       );
+
       return;
     }
 
-    const complaints = getStoredComplaints();
+    const complaints =
+      getStoredComplaints();
 
     const found = complaints.find(
       (complaint) =>
@@ -53,41 +73,44 @@ const Feedback = () => {
           cleanId.toLowerCase()
     );
 
-    // Complaint not found
     if (!found) {
       setIsVerified(false);
       setVerificationType("error");
+
       setVerificationMessage(
         "Complaint not found. Please check your Reference ID."
       );
+
       return;
     }
 
-    // Complaint exists but isn't resolved
     if (found.status !== "Resolved") {
       setIsVerified(false);
       setVerificationType("warning");
+
       setVerificationMessage(
         `Complaint found, but its current status is "${found.status}". Feedback is available only after the complaint is resolved.`
       );
+
       return;
     }
 
-    // Check duplicate feedback
     if (hasSubmittedFeedback(found.id)) {
       setIsVerified(false);
       setVerificationType("warning");
+
       setVerificationMessage(
         "Feedback has already been submitted for this complaint."
       );
+
       return;
     }
 
-    // Everything is valid
     setIsVerified(true);
     setVerificationType("success");
+
     setVerificationMessage(
-      "✓ Complaint verified. You can now submit feedback."
+      "Complaint verified. You can now submit feedback."
     );
   };
 
@@ -98,14 +121,14 @@ const Feedback = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const cleanComplaintId = complaintId
-      .trim()
-      .toUpperCase();
+    const cleanComplaintId =
+      complaintId.trim().toUpperCase();
 
     if (!cleanComplaintId) {
       toast.error(
         "Please enter your Complaint Reference ID."
       );
+
       return;
     }
 
@@ -113,6 +136,7 @@ const Feedback = () => {
       toast.error(
         "Please verify your Complaint Reference ID first."
       );
+
       return;
     }
 
@@ -120,6 +144,7 @@ const Feedback = () => {
       toast.error(
         "Please enter your feedback comments."
       );
+
       return;
     }
 
@@ -131,10 +156,6 @@ const Feedback = () => {
       category,
 
       comment: comment.trim(),
-
-      // ============================================
-      // GUEST FEEDBACK IS ALWAYS ANONYMOUS
-      // ============================================
 
       anonymous: true,
 
@@ -148,7 +169,7 @@ const Feedback = () => {
     saveFeedback(feedbackObj);
 
     toast.success(
-      "Thank you! Your anonymous feedback has been submitted."
+      "Your anonymous feedback has been submitted."
     );
 
     navigate(
@@ -157,465 +178,630 @@ const Feedback = () => {
   };
 
   // =====================================================
-  // HANDLE COMPLAINT ID CHANGE
+  // ID CHANGE
   // =====================================================
 
   const handleComplaintIdChange = (e) => {
     setComplaintId(e.target.value);
 
-    // Reset previous verification when ID changes
     setIsVerified(false);
     setVerificationMessage("");
     setVerificationType("");
   };
 
-  // =====================================================
-  // PAGE
-  // =====================================================
-
   return (
-    <div
-      style={{
-        minHeight: "calc(100vh - 64px)",
-        backgroundColor: "#030712",
-        color: "#ffffff",
-        padding: "32px 20px",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "600px",
-          margin: "0 auto",
-          background: "#111827",
-          border: "1px solid #1f2937",
-          padding: "32px",
-          borderRadius: "12px",
-        }}
-      >
+    <>
+      <Navbar />
 
-        {/* =================================================
-            ANONYMOUS INFORMATION
-        ================================================= */}
+      <div className="feedback-page">
 
-        <div
-          style={{
-            marginBottom: "24px",
-            padding: "14px 16px",
-            background:
-              "rgba(56, 189, 248, 0.08)",
-            border:
-              "1px solid rgba(56, 189, 248, 0.25)",
-            borderRadius: "8px",
-          }}
-        >
-          <div
-            style={{
-              color: "#38bdf8",
-              fontSize: "13px",
-              fontWeight: "700",
-              marginBottom: "5px",
-            }}
-          >
-            🔒 ANONYMOUS FEEDBACK
+        <div className="feedback-card">
+
+          {/* ANONYMOUS NOTICE */}
+
+          <div className="anonymous-notice">
+
+            <div className="notice-title">
+              ANONYMOUS FEEDBACK
+            </div>
+
+            <div className="notice-text">
+              No name, email, password, or account is
+              required. Your feedback will be submitted
+              anonymously.
+            </div>
+
           </div>
 
-          <div
-            style={{
-              color: "#9ca3af",
-              fontSize: "12px",
-              lineHeight: "1.5",
-            }}
-          >
-            No name, email, password, or account is
-            required. Your feedback will be submitted
-            anonymously.
+          {/* HEADER */}
+
+          <div className="feedback-header">
+
+            <span className="page-label">
+              CAMPUS EXPERIENCE
+            </span>
+
+            <h1>
+              Anonymous Feedback
+            </h1>
+
+            <p>
+              Share your experience after your complaint
+              has been resolved.
+            </p>
+
           </div>
-        </div>
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
+          {/* FORM */}
 
-        <h1
-          style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            marginBottom: "8px",
-          }}
-        >
-          Submit Feedback
-        </h1>
+          <form
+            onSubmit={handleSubmit}
+            className="feedback-form"
+          >
 
-        <p
-          style={{
-            color: "#9ca3af",
-            fontSize: "14px",
-            marginBottom: "24px",
-            lineHeight: "1.6",
-          }}
-        >
-          Share your experience after your complaint
-          has been resolved.
-        </p>
+            {/* COMPLAINT ID */}
 
-        {/* =================================================
-            FORM
-        ================================================= */}
+            <div className="form-group">
 
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-          }}
-        >
+              <label htmlFor="complaintId">
+                Complaint Reference ID*
+              </label>
 
-          {/* =================================================
-              COMPLAINT REFERENCE ID
-          ================================================= */}
+              <div className="verify-row">
 
-          <div>
-            <label
-              htmlFor="complaintId"
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#9ca3af",
-                marginBottom: "6px",
-              }}
-            >
-              Complaint Reference ID*
-            </label>
+                <input
+                  id="complaintId"
+                  type="text"
+                  placeholder="Example: CFMS-2026-12345"
+                  value={complaintId}
+                  onChange={handleComplaintIdChange}
+                />
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-              }}
-            >
-              <input
-                id="complaintId"
-                type="text"
-                placeholder="e.g. CFMS-2026-12345"
-                value={complaintId}
-                onChange={handleComplaintIdChange}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: "10px 14px",
-                  background: "#090d16",
-                  border:
-                    "1px solid #374151",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
+                <button
+                  type="button"
+                  onClick={handleVerifyComplaint}
+                  className="verify-btn"
+                >
+                  Verify
+                </button>
+
+              </div>
+
+              {verificationMessage && (
+                <div
+                  className={`verification-message ${verificationType}`}
+                >
+                  {verificationMessage}
+                </div>
+              )}
+
+            </div>
+
+            {/* RATING */}
+
+            <div className="form-group">
+
+              <label>
+                Rating*
+              </label>
+
+              <div className="rating-options">
+
+                {[1, 2, 3, 4, 5].map(
+                  (number) => (
+                    <button
+                      type="button"
+                      key={number}
+                      onClick={() =>
+                        setRating(number)
+                      }
+                      className={
+                        number === rating
+                          ? "rating-btn active"
+                          : "rating-btn"
+                      }
+                    >
+                      {number}
+                    </button>
+                  )
+                )}
+
+              </div>
+
+              <div className="rating-label">
+                Selected rating: {rating} out of 5
+              </div>
+
+            </div>
+
+            {/* CATEGORY */}
+
+            <div className="form-group">
+
+              <label htmlFor="feedbackCategory">
+                Category
+              </label>
+
+              <select
+                id="feedbackCategory"
+                value={category}
+                onChange={(e) =>
+                  setCategory(e.target.value)
+                }
+              >
+                <option value="General">
+                  General
+                </option>
+
+                <option value="Library">
+                  Library
+                </option>
+
+                <option value="Hostel">
+                  Hostel
+                </option>
+
+                <option value="Canteen">
+                  Canteen
+                </option>
+
+                <option value="Academic">
+                  Academic
+                </option>
+
+                <option value="Infrastructure">
+                  Infrastructure
+                </option>
+              </select>
+
+            </div>
+
+            {/* COMMENTS */}
+
+            <div className="form-group">
+
+              <label htmlFor="feedbackComment">
+                Comments*
+              </label>
+
+              <textarea
+                id="feedbackComment"
+                rows="6"
+                placeholder="Describe your resolution experience..."
+                value={comment}
+                onChange={(e) =>
+                  setComment(e.target.value)
+                }
               />
 
-              <button
-                type="button"
-                onClick={handleVerifyComplaint}
-                style={{
-                  padding: "10px 16px",
-                  background: "#38bdf8",
-                  color: "#030712",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Verify
-              </button>
             </div>
 
-            {/* Verification message */}
+            {/* ANONYMOUS MESSAGE */}
 
-            {verificationMessage && (
-              <div
-                style={{
-                  marginTop: "10px",
-                  padding: "10px 12px",
-                  borderRadius: "7px",
+            <div className="feedback-note">
 
-                  background:
-                    verificationType === "success"
-                      ? "rgba(16, 185, 129, 0.08)"
-                      : verificationType === "warning"
-                      ? "rgba(251, 191, 36, 0.08)"
-                      : "rgba(248, 113, 113, 0.08)",
+              <strong>
+                Anonymous submission
+              </strong>
 
-                  border:
-                    verificationType === "success"
-                      ? "1px solid rgba(16, 185, 129, 0.25)"
-                      : verificationType === "warning"
-                      ? "1px solid rgba(251, 191, 36, 0.25)"
-                      : "1px solid rgba(248, 113, 113, 0.25)",
+              <span>
+                This feedback is submitted without
+                displaying your personal information.
+              </span>
 
-                  color:
-                    verificationType === "success"
-                      ? "#10b981"
-                      : verificationType === "warning"
-                      ? "#fbbf24"
-                      : "#f87171",
-
-                  fontSize: "12px",
-                  lineHeight: "1.5",
-                }}
-              >
-                {verificationMessage}
-              </div>
-            )}
-          </div>
-
-          {/* =================================================
-              RATING
-          ================================================= */}
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#9ca3af",
-                marginBottom: "8px",
-              }}
-            >
-              Rating*
-            </label>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                flexWrap: "wrap",
-              }}
-            >
-              {[1, 2, 3, 4, 5].map(
-                (star) => (
-                  <button
-                    type="button"
-                    key={star}
-                    onClick={() =>
-                      setRating(star)
-                    }
-                    style={{
-                      background:
-                        star <= rating
-                          ? "rgba(16, 185, 129, 0.2)"
-                          : "#090d16",
-
-                      border:
-                        star <= rating
-                          ? "1px solid #10b981"
-                          : "1px solid #374151",
-
-                      color:
-                        star <= rating
-                          ? "#10b981"
-                          : "#6b7280",
-
-                      padding: "8px 14px",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                    }}
-                  >
-                    ★ {star}
-                  </button>
-                )
-              )}
             </div>
-          </div>
 
-          {/* =================================================
-              CATEGORY
-          ================================================= */}
+            {/* SUBMIT */}
 
-          <div>
-            <label
-              htmlFor="feedbackCategory"
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#9ca3af",
-                marginBottom: "6px",
-              }}
-            >
-              Category
-            </label>
-
-            <select
-              id="feedbackCategory"
-              value={category}
-              onChange={(e) =>
-                setCategory(e.target.value)
+            <button
+              type="submit"
+              disabled={!isVerified}
+              className={
+                isVerified
+                  ? "submit-feedback-btn"
+                  : "submit-feedback-btn disabled"
               }
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                background: "#090d16",
-                border:
-                  "1px solid #374151",
-                color: "#ffffff",
-                borderRadius: "8px",
-                fontSize: "14px",
-                outline: "none",
-              }}
             >
-              <option value="General">
-                General
-              </option>
+              Submit Anonymous Feedback
+            </button>
 
-              <option value="Library">
-                Library
-              </option>
+          </form>
 
-              <option value="Hostel">
-                Hostel
-              </option>
-
-              <option value="Canteen">
-                Canteen
-              </option>
-
-              <option value="Academic">
-                Academic
-              </option>
-
-              <option value="Infrastructure">
-                Infrastructure
-              </option>
-            </select>
-          </div>
-
-          {/* =================================================
-              COMMENTS
-          ================================================= */}
-
-          <div>
-            <label
-              htmlFor="feedbackComment"
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#9ca3af",
-                marginBottom: "6px",
-              }}
-            >
-              Comments*
-            </label>
-
-            <textarea
-              id="feedbackComment"
-              rows="5"
-              placeholder="Describe your resolution experience..."
-              value={comment}
-              onChange={(e) =>
-                setComment(e.target.value)
-              }
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "10px 14px",
-                background: "#090d16",
-                border:
-                  "1px solid #374151",
-                color: "#ffffff",
-                borderRadius: "8px",
-                fontSize: "14px",
-                outline: "none",
-                resize: "vertical",
-              }}
-            />
-          </div>
-
-          {/* =================================================
-              ANONYMOUS NOTICE
-          ================================================= */}
-
-          <div
-            style={{
-              padding: "12px 14px",
-              background:
-                "rgba(16, 185, 129, 0.06)",
-              border:
-                "1px solid rgba(16, 185, 129, 0.2)",
-              borderRadius: "8px",
-              color: "#9ca3af",
-              fontSize: "12px",
-              lineHeight: "1.5",
-            }}
-          >
-            🔒 This feedback is automatically
-            anonymous. No personal information is
-            collected.
-          </div>
-
-          {/* =================================================
-              SUBMIT
-          ================================================= */}
+          {/* BACK HOME */}
 
           <button
-            type="submit"
-            disabled={!isVerified}
-            style={{
-              padding: "12px",
-
-              background: isVerified
-                ? "#10b981"
-                : "#374151",
-
-              color: "#ffffff",
-
-              border: "none",
-
-              borderRadius: "8px",
-
-              fontWeight: "bold",
-
-              cursor: isVerified
-                ? "pointer"
-                : "not-allowed",
-
-              marginTop: "8px",
-            }}
+            type="button"
+            onClick={() => navigate("/")}
+            className="back-home-btn"
           >
-            Submit Anonymous Feedback
+            Back to Home
           </button>
 
-        </form>
-
-        {/* =================================================
-            BACK HOME
-        ================================================= */}
-
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          style={{
-            width: "100%",
-            marginTop: "12px",
-            padding: "11px",
-            background: "transparent",
-            color: "#9ca3af",
-            border:
-              "1px solid #374151",
-            borderRadius: "8px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          Back to Home
-        </button>
+        </div>
 
       </div>
-    </div>
+
+      <style>{`
+
+        .feedback-page {
+          min-height: calc(100vh - 64px);
+
+          background: #030712;
+
+          color: #ffffff;
+
+          padding: 45px 20px;
+
+          box-sizing: border-box;
+        }
+
+        .feedback-card {
+          width: 100%;
+          max-width: 650px;
+
+          margin: 0 auto;
+
+          background: #0b1620;
+
+          border: 1px solid #1f3440;
+
+          border-radius: 16px;
+
+          padding: 32px;
+
+          box-sizing: border-box;
+
+          box-shadow:
+            0 20px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .anonymous-notice {
+          padding: 15px 16px;
+
+          margin-bottom: 28px;
+
+          background:
+            rgba(56, 189, 248, 0.07);
+
+          border:
+            1px solid rgba(56, 189, 248, 0.22);
+
+          border-radius: 10px;
+        }
+
+        .notice-title {
+          color: #38bdf8;
+
+          font-size: 12px;
+
+          font-weight: 700;
+
+          letter-spacing: 1px;
+
+          margin-bottom: 6px;
+        }
+
+        .notice-text {
+          color: #94a3b8;
+
+          font-size: 13px;
+
+          line-height: 1.6;
+        }
+
+        .feedback-header {
+          margin-bottom: 28px;
+        }
+
+        .page-label {
+          color: #34d399;
+
+          font-size: 11px;
+
+          font-weight: 700;
+
+          letter-spacing: 1.8px;
+        }
+
+        .feedback-header h1 {
+          margin: 8px 0;
+
+          font-size: 30px;
+
+          line-height: 1.2;
+        }
+
+        .feedback-header p {
+          margin: 0;
+
+          color: #94a3b8;
+
+          font-size: 14px;
+
+          line-height: 1.6;
+        }
+
+        .feedback-form {
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 20px;
+        }
+
+        .form-group {
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 7px;
+        }
+
+        .form-group label {
+          color: #cbd5e1;
+
+          font-size: 13px;
+
+          font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+          width: 100%;
+
+          box-sizing: border-box;
+
+          padding: 12px 13px;
+
+          background: #060d14;
+
+          border: 1px solid #263b47;
+
+          border-radius: 8px;
+
+          color: #ffffff;
+
+          font-size: 14px;
+
+          font-family: inherit;
+
+          outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+          border-color: #10b981;
+
+          box-shadow:
+            0 0 0 3px
+            rgba(16, 185, 129, 0.08);
+        }
+
+        .form-group textarea {
+          resize: vertical;
+        }
+
+        .verify-row {
+          display: flex;
+
+          gap: 10px;
+        }
+
+        .verify-row input {
+          flex: 1;
+
+          min-width: 0;
+        }
+
+        .verify-btn {
+          padding: 12px 18px;
+
+          background: #38bdf8;
+
+          color: #03131c;
+
+          border: none;
+
+          border-radius: 8px;
+
+          font-weight: 700;
+
+          cursor: pointer;
+        }
+
+        .verification-message {
+          padding: 10px 12px;
+
+          border-radius: 8px;
+
+          font-size: 12px;
+
+          line-height: 1.5;
+        }
+
+        .verification-message.success {
+          background:
+            rgba(16, 185, 129, 0.08);
+
+          border:
+            1px solid rgba(16, 185, 129, 0.25);
+
+          color: #34d399;
+        }
+
+        .verification-message.warning {
+          background:
+            rgba(251, 191, 36, 0.08);
+
+          border:
+            1px solid rgba(251, 191, 36, 0.25);
+
+          color: #fbbf24;
+        }
+
+        .verification-message.error {
+          background:
+            rgba(248, 113, 113, 0.08);
+
+          border:
+            1px solid rgba(248, 113, 113, 0.25);
+
+          color: #f87171;
+        }
+
+        .rating-options {
+          display: flex;
+
+          gap: 8px;
+        }
+
+        .rating-btn {
+          width: 45px;
+
+          height: 42px;
+
+          background: #060d14;
+
+          color: #94a3b8;
+
+          border: 1px solid #263b47;
+
+          border-radius: 8px;
+
+          font-weight: 700;
+
+          cursor: pointer;
+        }
+
+        .rating-btn.active {
+          background:
+            rgba(16, 185, 129, 0.15);
+
+          color: #34d399;
+
+          border-color: #10b981;
+        }
+
+        .rating-label {
+          color: #64748b;
+
+          font-size: 12px;
+        }
+
+        .feedback-note {
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 4px;
+
+          padding: 13px 14px;
+
+          background:
+            rgba(16, 185, 129, 0.06);
+
+          border:
+            1px solid rgba(16, 185, 129, 0.2);
+
+          border-radius: 9px;
+        }
+
+        .feedback-note strong {
+          color: #34d399;
+
+          font-size: 12px;
+        }
+
+        .feedback-note span {
+          color: #94a3b8;
+
+          font-size: 12px;
+
+          line-height: 1.5;
+        }
+
+        .submit-feedback-btn {
+          padding: 13px;
+
+          background: #10b981;
+
+          color: #022c22;
+
+          border: none;
+
+          border-radius: 9px;
+
+          font-size: 14px;
+
+          font-weight: 700;
+
+          cursor: pointer;
+        }
+
+        .submit-feedback-btn.disabled {
+          background: #26313d;
+
+          color: #64748b;
+
+          cursor: not-allowed;
+        }
+
+        .back-home-btn {
+          width: 100%;
+
+          margin-top: 12px;
+
+          padding: 12px;
+
+          background: transparent;
+
+          color: #94a3b8;
+
+          border: 1px solid #263b47;
+
+          border-radius: 9px;
+
+          font-size: 14px;
+
+          font-weight: 600;
+
+          cursor: pointer;
+        }
+
+        .back-home-btn:hover {
+          color: #ffffff;
+
+          border-color: #10b981;
+        }
+
+        @media (max-width: 600px) {
+
+          .feedback-page {
+            padding: 25px 15px;
+          }
+
+          .feedback-card {
+            padding: 22px;
+          }
+
+          .feedback-header h1 {
+            font-size: 25px;
+          }
+
+          .verify-row {
+            flex-direction: column;
+          }
+
+          .verify-btn {
+            width: 100%;
+          }
+
+        }
+
+      `}</style>
+    </>
   );
 };
 

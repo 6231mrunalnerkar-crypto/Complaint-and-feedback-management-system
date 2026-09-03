@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+
+import Navbar from "../components/Navbar";
 import { saveComplaint } from "../utils/mockData";
 
 const GuestComplaint = () => {
@@ -38,7 +40,6 @@ const GuestComplaint = () => {
       subject: formData.subject.trim(),
       description: formData.description.trim(),
 
-      // Anonymous guest information
       anonymous: true,
       submittedBy: "Guest",
 
@@ -55,461 +56,583 @@ const GuestComplaint = () => {
     setSubmitted(true);
 
     toast.success(
-      "Anonymous complaint submitted successfully!"
+      "Anonymous complaint submitted successfully."
     );
   };
 
-  // ================= SUCCESS SCREEN =================
+  // =====================================================
+  // SUCCESS SCREEN
+  // =====================================================
 
   if (submitted) {
     return (
-      <div
-        style={{
-          minHeight: "calc(100vh - 64px)",
-          backgroundColor: "#030712",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <div
-          style={{
-            background: "#111827",
-            border: "1px solid #1f2937",
-            borderRadius: "16px",
-            padding: "32px",
-            maxWidth: "500px",
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
+      <>
+        <Navbar />
 
-          <span
-            style={{
-              color: "#10b981",
-              fontSize: "12px",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-            }}
-          >
-            ANONYMOUS SUBMISSION SUCCESSFUL
-          </span>
+        <div className="guest-page">
 
-          <h2
-            style={{
-              color: "#ffffff",
-              fontSize: "24px",
-              fontWeight: "bold",
-              margin: "8px 0 4px",
-            }}
-          >
-            Complaint Submitted
-          </h2>
+          <div className="guest-card success-card">
 
-          <p
-            style={{
-              color: "#9ca3af",
-              fontSize: "14px",
-              marginBottom: "24px",
-              lineHeight: "1.6",
-            }}
-          >
-            Your complaint has been submitted anonymously.
-            No personal information was required.
-          </p>
-
-          {/* Reference ID */}
-
-          <div
-            style={{
-              border: "1px dashed #10b981",
-              background: "rgba(16, 185, 129, 0.05)",
-              padding: "16px",
-              borderRadius: "8px",
-              marginBottom: "16px",
-            }}
-          >
-            <span
-              style={{
-                color: "#9ca3af",
-                fontSize: "12px",
-                textTransform: "uppercase",
-              }}
-            >
-              Reference ID
+            <span className="page-label">
+              ANONYMOUS SUBMISSION SUCCESSFUL
             </span>
 
-            <div
-              style={{
-                color: "#38bdf8",
-                fontSize: "20px",
-                fontWeight: "bold",
-                marginTop: "4px",
-              }}
-            >
-              {referenceId}
+            <h2>Complaint Submitted</h2>
+
+            <p>
+              Your complaint has been submitted anonymously.
+              No personal information was required.
+            </p>
+
+            <div className="reference-box">
+
+              <span>REFERENCE ID</span>
+
+              <strong>{referenceId}</strong>
+
             </div>
-          </div>
 
-          <p
-            style={{
-              color: "#fbbf24",
-              fontSize: "12px",
-              marginBottom: "20px",
-            }}
-          >
-            Save this Reference ID to track your complaint later.
-          </p>
+            <p className="reference-note">
+              Save this Reference ID to track your complaint
+              later.
+            </p>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
+            <div className="guest-actions">
 
-            <button
-              onClick={() =>
-                navigate(
-                  `/track-complaint?id=${referenceId}`
-                )
-              }
-              style={{
-                padding: "12px",
-                background: "#10b981",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Track Complaint
-            </button>
+              <button
+                onClick={() =>
+                  navigate(
+                    `/track-complaint?id=${referenceId}`
+                  )
+                }
+                className="primary-action"
+              >
+                Track Complaint
+              </button>
 
-            <button
-              onClick={() => {
-                setSubmitted(false);
+              <button
+                onClick={() => {
+                  setSubmitted(false);
 
-                setFormData({
-                  category: "Library",
-                  priority: "Medium",
-                  subject: "",
-                  description: "",
-                });
-              }}
-              style={{
-                padding: "12px",
-                background: "#1f2937",
-                color: "#fff",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Lodge Another Complaint
-            </button>
+                  setFormData({
+                    category: "Library",
+                    priority: "Medium",
+                    subject: "",
+                    description: "",
+                  });
+                }}
+                className="secondary-action"
+              >
+                Submit Another Complaint
+              </button>
 
-            <button
-              onClick={() => navigate("/")}
-              style={{
-                padding: "12px",
-                background: "transparent",
-                color: "#9ca3af",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Back to Home
-            </button>
+              <button
+                onClick={() => navigate("/")}
+                className="home-action"
+              >
+                Back to Home
+              </button>
+
+            </div>
 
           </div>
 
         </div>
-      </div>
+      </>
     );
   }
 
-  // ================= FORM =================
+  // =====================================================
+  // FORM
+  // =====================================================
 
   return (
-    <div
-      style={{
-        minHeight: "calc(100vh - 64px)",
-        backgroundColor: "#030712",
-        color: "#ffffff",
-        padding: "32px 20px",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "600px",
-          margin: "0 auto",
-          background: "#111827",
-          border: "1px solid #1f2937",
-          padding: "32px",
-          borderRadius: "12px",
-        }}
-      >
+    <>
+      <Navbar />
 
-        {/* Anonymous Notice */}
+      <div className="guest-page">
 
-        <div
-          style={{
-            marginBottom: "24px",
-            padding: "14px 16px",
-            background: "rgba(56, 189, 248, 0.08)",
-            border: "1px solid rgba(56, 189, 248, 0.25)",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="guest-card">
 
-          <div
-            style={{
-              color: "#38bdf8",
-              fontSize: "13px",
-              fontWeight: "700",
-              marginBottom: "5px",
-            }}
-          >
-            🔒 ANONYMOUS REPORTING
+          <div className="anonymous-notice">
+
+            <div className="notice-title">
+              ANONYMOUS REPORTING
+            </div>
+
+            <div className="notice-text">
+              No name, email, password, student ID, or account
+              is required. Your complaint will be submitted
+              anonymously.
+            </div>
+
           </div>
 
-          <div
-            style={{
-              color: "#9ca3af",
-              fontSize: "12px",
-              lineHeight: "1.5",
-            }}
-          >
-            No name, email, password, student ID, or account
-            is required. Your complaint will be submitted anonymously.
+          <div className="page-header">
+
+            <span className="page-label">
+              CAMPUS CONCERN
+            </span>
+
+            <h1>Anonymous Complaint</h1>
+
+            <p>
+              Report a campus concern directly to the
+              appropriate administration team.
+            </p>
+
           </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className="complaint-form"
+          >
+
+            {/* CATEGORY + PRIORITY */}
+
+            <div className="form-grid">
+
+              <div className="form-group">
+
+                <label>
+                  Category*
+                </label>
+
+                <select
+                  value={formData.category}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      category: e.target.value,
+                    })
+                  }
+                >
+                  <option value="Library">
+                    Library
+                  </option>
+
+                  <option value="Hostel">
+                    Hostel
+                  </option>
+
+                  <option value="Canteen">
+                    Canteen
+                  </option>
+
+                  <option value="Academic">
+                    Academic
+                  </option>
+
+                  <option value="Infrastructure">
+                    Infrastructure
+                  </option>
+                </select>
+
+              </div>
+
+              <div className="form-group">
+
+                <label>
+                  Priority*
+                </label>
+
+                <select
+                  value={formData.priority}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: e.target.value,
+                    })
+                  }
+                >
+                  <option value="Low">
+                    Low
+                  </option>
+
+                  <option value="Medium">
+                    Medium
+                  </option>
+
+                  <option value="High">
+                    High
+                  </option>
+                </select>
+
+              </div>
+
+            </div>
+
+            {/* SUBJECT */}
+
+            <div className="form-group">
+
+              <label>
+                Subject / Title*
+              </label>
+
+              <input
+                type="text"
+                placeholder="Briefly describe your issue"
+                value={formData.subject}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    subject: e.target.value,
+                  })
+                }
+              />
+
+            </div>
+
+            {/* DESCRIPTION */}
+
+            <div className="form-group">
+
+              <label>
+                Detailed Description*
+              </label>
+
+              <textarea
+                rows="6"
+                placeholder="Provide details about your concern..."
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    description: e.target.value,
+                  })
+                }
+              />
+
+            </div>
+
+            <button
+              type="submit"
+              className="submit-complaint-btn"
+            >
+              Submit Anonymous Complaint
+            </button>
+
+          </form>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="back-home-btn"
+          >
+            Back to Home
+          </button>
 
         </div>
 
-        <h1
-          style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            marginBottom: "8px",
-          }}
-        >
-          Lodge a Complaint
-        </h1>
-
-        <p
-          style={{
-            color: "#9ca3af",
-            fontSize: "14px",
-            marginBottom: "24px",
-          }}
-        >
-          Register your concern for campus administration review.
-        </p>
-
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-          }}
-        >
-
-          {/* Category + Priority */}
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  color: "#9ca3af",
-                  marginBottom: "6px",
-                }}
-              >
-                Category*
-              </label>
-
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    category: e.target.value,
-                  })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  background: "#090d16",
-                  border: "1px solid #374151",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  outline: "none",
-                }}
-              >
-                <option value="Library">Library</option>
-                <option value="Hostel">Hostel</option>
-                <option value="Canteen">Canteen</option>
-                <option value="Academic">Academic</option>
-                <option value="Infrastructure">
-                  Infrastructure
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  color: "#9ca3af",
-                  marginBottom: "6px",
-                }}
-              >
-                Priority*
-              </label>
-
-              <select
-                value={formData.priority}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    priority: e.target.value,
-                  })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  background: "#090d16",
-                  border: "1px solid #374151",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  outline: "none",
-                }}
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-              </select>
-            </div>
-
-          </div>
-
-          {/* Subject */}
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#9ca3af",
-                marginBottom: "6px",
-              }}
-            >
-              Subject / Title*
-            </label>
-
-            <input
-              type="text"
-              placeholder="Briefly describe your issue"
-              value={formData.subject}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  subject: e.target.value,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "#090d16",
-                border: "1px solid #374151",
-                color: "#fff",
-                borderRadius: "8px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
-          {/* Description */}
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#9ca3af",
-                marginBottom: "6px",
-              }}
-            >
-              Detailed Description*
-            </label>
-
-            <textarea
-              rows="4"
-              placeholder="Provide details about your concern..."
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  description: e.target.value,
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "#090d16",
-                border: "1px solid #374151",
-                color: "#fff",
-                borderRadius: "8px",
-                outline: "none",
-                resize: "vertical",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
-          {/* Submit */}
-
-          <button
-            type="submit"
-            style={{
-              padding: "12px",
-              background: "#10b981",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              marginTop: "8px",
-            }}
-          >
-            Submit Anonymous Complaint
-          </button>
-
-        </form>
-
       </div>
-    </div>
+
+      <style>{`
+
+        .guest-page {
+          min-height: calc(100vh - 64px);
+          background: #030712;
+          color: #ffffff;
+          padding: 45px 20px;
+          box-sizing: border-box;
+        }
+
+        .guest-card {
+          width: 100%;
+          max-width: 650px;
+          margin: 0 auto;
+
+          background: #0b1620;
+          border: 1px solid #1f3440;
+          border-radius: 16px;
+
+          padding: 32px;
+
+          box-sizing: border-box;
+
+          box-shadow:
+            0 20px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .anonymous-notice {
+          padding: 15px 16px;
+          margin-bottom: 28px;
+
+          background: rgba(56, 189, 248, 0.07);
+
+          border: 1px solid rgba(56, 189, 248, 0.22);
+
+          border-radius: 10px;
+        }
+
+        .notice-title {
+          color: #38bdf8;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          margin-bottom: 6px;
+        }
+
+        .notice-text {
+          color: #94a3b8;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+
+        .page-header {
+          margin-bottom: 28px;
+        }
+
+        .page-label {
+          color: #34d399;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 1.8px;
+        }
+
+        .page-header h1 {
+          margin: 8px 0;
+          font-size: 30px;
+          line-height: 1.2;
+        }
+
+        .page-header p {
+          color: #94a3b8;
+          font-size: 14px;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .complaint-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .form-group label {
+          color: #cbd5e1;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+          width: 100%;
+          box-sizing: border-box;
+
+          padding: 12px 13px;
+
+          background: #060d14;
+
+          border: 1px solid #263b47;
+
+          border-radius: 8px;
+
+          color: #ffffff;
+
+          font-size: 14px;
+
+          outline: none;
+
+          font-family: inherit;
+
+          transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+          border-color: #10b981;
+
+          box-shadow:
+            0 0 0 3px rgba(16, 185, 129, 0.08);
+        }
+
+        .form-group textarea {
+          resize: vertical;
+        }
+
+        .submit-complaint-btn {
+          border: none;
+
+          padding: 13px 18px;
+
+          background: #10b981;
+
+          color: #022c22;
+
+          border-radius: 9px;
+
+          font-size: 14px;
+
+          font-weight: 700;
+
+          cursor: pointer;
+
+          transition:
+            transform 0.2s ease,
+            background 0.2s ease;
+        }
+
+        .submit-complaint-btn:hover {
+          background: #34d399;
+          transform: translateY(-1px);
+        }
+
+        .back-home-btn {
+          width: 100%;
+
+          margin-top: 12px;
+
+          padding: 12px;
+
+          background: transparent;
+
+          color: #94a3b8;
+
+          border: 1px solid #263b47;
+
+          border-radius: 9px;
+
+          font-size: 14px;
+
+          font-weight: 600;
+
+          cursor: pointer;
+        }
+
+        .back-home-btn:hover {
+          color: #ffffff;
+          border-color: #10b981;
+        }
+
+        /* SUCCESS */
+
+        .success-card {
+          max-width: 550px;
+          text-align: center;
+        }
+
+        .success-card h2 {
+          margin: 10px 0;
+
+          font-size: 28px;
+        }
+
+        .success-card > p {
+          color: #94a3b8;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+
+        .reference-box {
+          margin: 25px 0 14px;
+
+          padding: 18px;
+
+          border: 1px dashed #10b981;
+
+          background: rgba(16, 185, 129, 0.05);
+
+          border-radius: 10px;
+        }
+
+        .reference-box span {
+          display: block;
+
+          color: #94a3b8;
+
+          font-size: 11px;
+
+          letter-spacing: 1px;
+
+          margin-bottom: 7px;
+        }
+
+        .reference-box strong {
+          color: #38bdf8;
+
+          font-size: 21px;
+
+          letter-spacing: 1px;
+        }
+
+        .reference-note {
+          color: #fbbf24 !important;
+          font-size: 12px !important;
+        }
+
+        .guest-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 24px;
+        }
+
+        .guest-actions button {
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .primary-action {
+          background: #10b981;
+          color: #ffffff;
+          border: none;
+        }
+
+        .secondary-action {
+          background: #172331;
+          color: #ffffff;
+          border: 1px solid #334155;
+        }
+
+        .home-action {
+          background: transparent;
+          color: #94a3b8;
+          border: 1px solid #334155;
+        }
+
+        @media (max-width: 600px) {
+
+          .guest-page {
+            padding: 25px 15px;
+          }
+
+          .guest-card {
+            padding: 22px;
+          }
+
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .page-header h1 {
+            font-size: 25px;
+          }
+
+        }
+
+      `}</style>
+    </>
   );
 };
 

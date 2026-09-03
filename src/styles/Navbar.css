@@ -1,49 +1,37 @@
-.navbar {
+.cfms-navbar {
   width: 100%;
-
   position: sticky;
   top: 0;
-
   z-index: 1000;
 
-  background: var(--surface);
-
-  border-bottom: 1px solid var(--border);
-
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease;
+  background: #063f32;
+  border-bottom: 1px solid #08765b;
 }
 
 .navbar-container {
   width: 92%;
   max-width: 1200px;
-
-  min-height: 76px;
+  min-height: 68px;
 
   margin: 0 auto;
 
   display: flex;
   align-items: center;
-
   gap: 30px;
 }
 
-
 /* BRAND */
 
-.navbar-brand {
+.cfms-brand {
   display: flex;
   align-items: center;
-
   gap: 10px;
 
-  flex-shrink: 0;
-
   text-decoration: none;
+  flex-shrink: 0;
 }
 
-.brand-icon {
+.brand-box {
   width: 36px;
   height: 36px;
 
@@ -53,152 +41,171 @@
 
   border-radius: 9px;
 
-  background: var(--primary);
-
-  color: var(--button-text);
+  background: #10b981;
+  color: #063f32;
 
   font-size: 16px;
   font-weight: 800;
 }
 
-.brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
 .brand-name {
-  color: var(--text);
-
+  color: #ecfdf5;
   font-size: 17px;
   font-weight: 750;
 }
 
-.brand-caption {
-  margin-top: 3px;
+/* DESKTOP MENU */
 
-  color: var(--text-secondary);
-
-  font-size: 8px;
-
-  letter-spacing: 0.3px;
-}
-
-
-/* NAVIGATION */
-
-.navbar-links {
+.desktop-menu {
   display: flex;
   align-items: center;
-
-  gap: 28px;
+  gap: 4px;
 
   margin-left: auto;
 }
 
-.navbar-links a {
-  color: var(--text-secondary);
-
-  text-decoration: none;
-
-  font-size: 12px;
-  font-weight: 550;
-
-  transition: color 0.2s ease;
-}
-
-.navbar-links a:hover {
-  color: var(--primary);
-}
-
-
 /* THEME */
 
-.navbar-actions {
-  display: flex;
+.theme-button {
+  margin-left: 8px;
 
-  align-items: center;
+  padding: 8px 13px;
 
-  flex-shrink: 0;
-}
+  border: 1px solid #08765b;
+  border-radius: 7px;
 
-.theme-toggle {
-  padding: 9px 13px;
+  background: #075844;
+  color: #d1fae5;
 
-  border: 1px solid var(--border);
-
-  border-radius: 8px;
-
-  background: var(--background);
-
-  color: var(--text-secondary);
-
-  font-size: 10px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 
   cursor: pointer;
 
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+  transition: 0.2s ease;
 }
 
-.theme-toggle:hover {
-  border-color: var(--primary);
-
-  background: var(--primary-soft);
-
-  color: var(--primary);
+.theme-button:hover {
+  background: #08765b;
+  color: white;
 }
 
+/* LOGOUT */
 
-/* RESPONSIVE */
+.logout-button {
+  margin-left: 4px;
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 7px;
+
+  background: rgba(239, 68, 68, 0.1);
+  color: #fecaca;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* MOBILE BUTTON */
+
+.mobile-toggle {
+  display: none;
+
+  margin-left: auto;
+
+  padding: 8px 12px;
+
+  border: 1px solid #08765b;
+  border-radius: 7px;
+
+  background: #075844;
+  color: #d1fae5;
+
+  cursor: pointer;
+}
+
+/* MOBILE MENU */
+
+.mobile-menu {
+  display: none;
+}
+
+/* TABLET */
+
+@media (max-width: 1100px) {
+  .navbar-container {
+    width: 95%;
+  }
+
+  .desktop-menu {
+    gap: 1px;
+  }
+}
+
+/* MOBILE */
 
 @media (max-width: 950px) {
-  .navbar-links {
-    gap: 17px;
-  }
-
-  .brand-caption {
+  .desktop-menu {
     display: none;
   }
-}
 
-@media (max-width: 750px) {
+  .mobile-toggle {
+    display: block;
+  }
+
+  .mobile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    padding: 15px 5% 20px;
+
+    background: #063f32;
+    border-top: 1px solid #08765b;
+  }
+
   .navbar-container {
-    width: 94%;
-  }
-
-  .navbar-links {
-    display: none;
-  }
-
-  .navbar-actions {
-    margin-left: auto;
+    min-height: 62px;
   }
 }
 
+/* MOBILE THEME */
 
+.mobile-theme-button {
+  margin-top: 8px;
 
-/* Keep navbar buttons looking exactly like navbar links */
+  padding: 10px 12px;
 
-.navbar-links a,
-.navbar-links button {
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: inherit;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  color: inherit;
+  border: 1px solid #08765b;
+  border-radius: 7px;
+
+  background: #075844;
+  color: #d1fae5;
+
+  text-align: left;
   cursor: pointer;
 }
 
-.navbar-links a:hover,
-.navbar-links button:hover {
-  color: #10b981;
+/* MOBILE LOGOUT */
+
+.mobile-logout-button {
+  margin-top: 5px;
+
+  padding: 10px 12px;
+
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 7px;
+
+  background: rgba(239, 68, 68, 0.1);
+  color: #fecaca;
+
+  text-align: left;
+  cursor: pointer;
 }

@@ -52,7 +52,6 @@ function Register() {
         dateOfBirth: value,
         age: calculateAge(value),
       }));
-
       return;
     }
 
@@ -61,7 +60,6 @@ function Register() {
         ...previous,
         [name]: checked,
       }));
-
       return;
     }
 
@@ -70,7 +68,6 @@ function Register() {
         ...previous,
         [name]: files[0] || null,
       }));
-
       return;
     }
 
@@ -88,16 +85,56 @@ function Register() {
       return;
     }
 
+    /*
+      Store the complete student profile information.
+
+      The actual identity-proof file is NOT stored in localStorage.
+      Only its filename is retained so the profile can indicate
+      that a document was submitted.
+    */
+    const studentUser = {
+      role: "student",
+
+      id: formData.rollNumber,
+
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+
+      name: `${formData.firstName} ${formData.lastName}`.trim(),
+
+      institution: formData.institution,
+
+      dateOfBirth: formData.dateOfBirth,
+      age: formData.age,
+
+      address: formData.address,
+
+      rollNumber: formData.rollNumber,
+
+      email: formData.email,
+
+      contact: formData.contact,
+
+      identityProofName: formData.identityProof
+        ? formData.identityProof.name
+        : "",
+
+      identityProofSubmitted: Boolean(formData.identityProof),
+
+      accountStatus: "Active",
+
+      registeredOn: new Date().toISOString().split("T")[0],
+    };
+
     localStorage.setItem(
       "cfms_user",
-      JSON.stringify({
-        role: "student",
-        id: formData.rollNumber,
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        institution: formData.institution,
-      })
+      JSON.stringify(studentUser)
     );
+
+    /*
+      Profile photo is deliberately NOT created here.
+      It will be managed separately from the Profile page.
+    */
 
     navigate("/login");
   };
@@ -107,10 +144,7 @@ function Register() {
       <Navbar />
 
       <main className="auth-page register-page">
-
         <div className="auth-card register-card">
-
-          {/* Back to Home */}
 
           <div className="auth-top-navigation">
             <Link to="/" className="auth-home-btn">
@@ -118,11 +152,7 @@ function Register() {
             </Link>
           </div>
 
-
-          {/* Header */}
-
           <div className="auth-header">
-
             <Link to="/" className="auth-logo">
               <span>C</span>
               <strong>CampusVoice</strong>
@@ -132,36 +162,28 @@ function Register() {
               STUDENT REGISTRATION
             </span>
 
-            <h1>
-              Create Account
-            </h1>
+            <h1>Create Account</h1>
 
             <p>
               Register your account to submit and track
               campus complaints and feedback.
             </p>
-
           </div>
-
-
-          {/* Registration Form */}
 
           <form
             className="auth-form register-form"
             onSubmit={handleRegister}
           >
 
-            {/* Personal Information */}
+            {/* PERSONAL INFORMATION */}
 
             <div className="form-section-title">
               Personal Information
             </div>
 
-
             <div className="form-row">
 
               <div className="form-group">
-
                 <label htmlFor="firstName">
                   First Name <span>*</span>
                 </label>
@@ -175,12 +197,9 @@ function Register() {
                   value={formData.firstName}
                   onChange={handleChange}
                 />
-
               </div>
 
-
               <div className="form-group">
-
                 <label htmlFor="lastName">
                   Last Name <span>*</span>
                 </label>
@@ -194,14 +213,11 @@ function Register() {
                   value={formData.lastName}
                   onChange={handleChange}
                 />
-
               </div>
 
             </div>
 
-
             <div className="form-group">
-
               <label htmlFor="institution">
                 College / Institution <span>*</span>
               </label>
@@ -215,14 +231,11 @@ function Register() {
                 value={formData.institution}
                 onChange={handleChange}
               />
-
             </div>
-
 
             <div className="form-row">
 
               <div className="form-group">
-
                 <label htmlFor="dateOfBirth">
                   Date of Birth <span>*</span>
                 </label>
@@ -235,12 +248,9 @@ function Register() {
                   value={formData.dateOfBirth}
                   onChange={handleChange}
                 />
-
               </div>
 
-
               <div className="form-group">
-
                 <label htmlFor="age">
                   Age
                 </label>
@@ -257,21 +267,17 @@ function Register() {
                   placeholder="Automatically calculated"
                   readOnly
                 />
-
               </div>
 
             </div>
 
-
-            {/* Contact Information */}
+            {/* CONTACT INFORMATION */}
 
             <div className="form-section-title">
               Contact Information
             </div>
 
-
             <div className="form-group">
-
               <label htmlFor="address">
                 Address <span>*</span>
               </label>
@@ -284,14 +290,11 @@ function Register() {
                 value={formData.address}
                 onChange={handleChange}
               />
-
             </div>
-
 
             <div className="form-row">
 
               <div className="form-group">
-
                 <label htmlFor="rollNumber">
                   Desired Roll Number <span>*</span>
                 </label>
@@ -305,12 +308,9 @@ function Register() {
                   value={formData.rollNumber}
                   onChange={handleChange}
                 />
-
               </div>
 
-
               <div className="form-group">
-
                 <label htmlFor="contact">
                   Contact Number <span>*</span>
                 </label>
@@ -326,14 +326,11 @@ function Register() {
                   value={formData.contact}
                   onChange={handleChange}
                 />
-
               </div>
 
             </div>
 
-
             <div className="form-group">
-
               <label htmlFor="registerEmail">
                 Email Address <span>*</span>
               </label>
@@ -347,12 +344,9 @@ function Register() {
                 value={formData.email}
                 onChange={handleChange}
               />
-
             </div>
 
-
             <div className="form-group">
-
               <label htmlFor="registerPassword">
                 Password <span>*</span>
               </label>
@@ -371,19 +365,15 @@ function Register() {
               <small className="field-help">
                 Password must contain at least 6 characters.
               </small>
-
             </div>
 
-
-            {/* Identity Verification */}
+            {/* IDENTITY VERIFICATION */}
 
             <div className="form-section-title">
               Identity Verification
             </div>
 
-
             <div className="form-group">
-
               <label htmlFor="identityProof">
                 Proof of Identity <span>*</span>
               </label>
@@ -400,14 +390,11 @@ function Register() {
               <small className="field-help">
                 Upload a valid college ID card in JPG, PNG, or PDF format.
               </small>
-
             </div>
 
-
-            {/* Consent */}
+            {/* CONSENT */}
 
             <div className="consent-box">
-
               <label className="consent-label">
 
                 <input
@@ -427,11 +414,7 @@ function Register() {
                 </span>
 
               </label>
-
             </div>
-
-
-            {/* Submit */}
 
             <button
               type="submit"
@@ -442,11 +425,7 @@ function Register() {
 
           </form>
 
-
-          {/* Footer */}
-
           <div className="auth-footer">
-
             <span>
               Already have an account?
             </span>
@@ -454,11 +433,9 @@ function Register() {
             <Link to="/login">
               Sign In
             </Link>
-
           </div>
 
         </div>
-
       </main>
     </>
   );

@@ -1,9 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -16,44 +11,28 @@ import StaffDashboard from "./pages/StaffDashboard";
 
 import GuestComplaint from "./pages/GuestComplaint";
 import TrackComplaint from "./pages/TrackComplaint";
-
 import Feedback from "./pages/Feedback";
+
 import MyComplaints from "./pages/MyComplaints";
 import AdminFeedback from "./pages/AdminFeedback";
 import GuestDashboard from "./pages/GuestDashboard";
+
+import Profile from "./pages/profile";
 
 function App() {
   return (
     <Router>
       <Routes>
 
-        {/* ================= HOME ================= */}
+        <Route path="/" element={<Home />} />
 
-        <Route
-          path="/"
-          element={<Home />}
-        />
+        <Route path="/login" element={<Login />} />
 
-        {/* ================= AUTHENTICATION ================= */}
+        <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+        <Route path="/about" element={<About />} />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-
-        {/* ================= ABOUT ================= */}
-
-        <Route
-          path="/about"
-          element={<About />}
-        />
-
-        {/* ================= GUEST / PUBLIC ================= */}
+        {/* Student Services */}
 
         <Route
           path="/submit-complaint"
@@ -70,7 +49,12 @@ function App() {
           element={<Feedback />}
         />
 
-        {/* ================= STUDENT ================= */}
+        <Route
+          path="/profile"
+          element={<Profile />}
+        />
+
+        {/* Student Dashboard */}
 
         <Route
           path="/student-dashboard"
@@ -82,14 +66,14 @@ function App() {
           element={<MyComplaints />}
         />
 
-        {/* ================= STAFF ================= */}
+        {/* Staff */}
 
         <Route
           path="/staff-dashboard"
           element={<StaffDashboard />}
         />
 
-        {/* ================= ADMIN ================= */}
+        {/* Admin */}
 
         <Route
           path="/admin-dashboard"
@@ -111,12 +95,14 @@ function App() {
           element={<AdminFeedback />}
         />
 
+        {/* Guest */}
+
         <Route
           path="/guest-dashboard"
           element={<GuestDashboard />}
         />
 
-        {/* ================= FALLBACK ================= */}
+        {/* Fallback */}
 
         <Route
           path="*"

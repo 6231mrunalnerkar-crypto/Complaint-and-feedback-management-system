@@ -383,6 +383,39 @@
 
 
 /* =========================================================
+   COMPLAINTS + FEEDBACKS SIDE-BY-SIDE
+   ========================================================= */
+
+.dashboard-split-row {
+  display: grid;
+
+  grid-template-columns: 1.15fr 1fr;
+
+  gap: 20px;
+
+  align-items: start;
+
+  margin-bottom: 25px;
+}
+
+.dashboard-split-row .split-col {
+  margin-bottom: 0;
+}
+
+.dashboard-split-row .feedback-list {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 950px) {
+
+  .dashboard-split-row {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* =========================================================
    COMPLAINT TABLE
    ========================================================= */
 
@@ -990,123 +1023,6 @@
 
 
 /* =========================================================
-   FOOTER
-   ========================================================= */
-
-.dashboard-footer {
-  width: 100%;
-
-  max-width: 1150px;
-
-  margin: 10px auto 0;
-
-  padding: 28px 0 0;
-
-  border-top: 1px solid var(--border);
-}
-
-.dashboard-footer-top {
-  display: flex;
-
-  justify-content: space-between;
-  align-items: center;
-
-  gap: 30px;
-
-  padding: 0 5px 22px;
-}
-
-.dashboard-footer-brand {
-  display: flex;
-
-  align-items: center;
-
-  gap: 10px;
-}
-
-.dashboard-footer-logo {
-  width: 32px;
-  height: 32px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 8px;
-
-  background: var(--primary);
-
-  color: var(--button-text);
-
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.dashboard-footer-brand strong {
-  display: block;
-
-  margin-bottom: 3px;
-
-  color: var(--text);
-
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.dashboard-footer-brand span {
-  display: block;
-
-  color: var(--text-secondary);
-
-  font-size: 9px;
-}
-
-.dashboard-footer-links {
-  display: flex;
-
-  align-items: center;
-
-  flex-wrap: wrap;
-
-  justify-content: flex-end;
-
-  gap: 18px;
-}
-
-.dashboard-footer-links a {
-  color: var(--text-secondary);
-
-  text-decoration: none;
-
-  font-size: 10px;
-  font-weight: 600;
-
-  transition: 0.2s ease;
-}
-
-.dashboard-footer-links a:hover {
-  color: var(--primary);
-}
-
-.dashboard-footer-bottom {
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 15px;
-
-  padding: 15px 5px 0;
-
-  border-top: 1px solid var(--border);
-
-  color: var(--text-secondary);
-
-  font-size: 9px;
-}
-
-
-/* =========================================================
    MODAL
    ========================================================= */
 
@@ -1389,16 +1305,6 @@
     flex-direction: column;
   }
 
-  .dashboard-footer-top {
-    align-items: flex-start;
-
-    flex-direction: column;
-  }
-
-  .dashboard-footer-links {
-    justify-content: flex-start;
-  }
-
 }
 
 
@@ -1502,12 +1408,6 @@
     width: 100%;
 
     box-sizing: border-box;
-  }
-
-  .dashboard-footer-bottom {
-    align-items: flex-start;
-
-    flex-direction: column;
   }
 
   .modal-body {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const Navbar = () => {
+const Navbar = ({ onAnalyticsClick }) => {
   const navigate = useNavigate();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,9 +29,7 @@ const Navbar = () => {
       newTheme
     );
 
-    window.dispatchEvent(
-      new Event("cfms-theme-change")
-    );
+    window.dispatchEvent(new Event("cfms-theme-change"));
   };
 
   // =====================================================
@@ -58,28 +56,35 @@ const Navbar = () => {
   };
 
   // =====================================================
+  // ANALYTICS
+  // =====================================================
+
+  const handleAnalytics = () => {
+    setMobileMenuOpen(false);
+
+    if (onAnalyticsClick) {
+      onAnalyticsClick();
+      return;
+    }
+
+    navigate("/admin/feedback");
+  };
+
+  // =====================================================
   // NAV LINK STYLE
   // =====================================================
 
   const navLinkStyle = ({ isActive }) => ({
     color: isActive ? "#34d399" : "#d1fae5",
-
     textDecoration: "none",
-
     fontWeight: isActive ? "700" : "500",
-
     fontSize: "14px",
-
     padding: "8px 12px",
-
     borderRadius: "7px",
-
     transition: "all 0.2s ease",
-
     background: isActive
       ? "rgba(52, 211, 153, 0.12)"
       : "transparent",
-
     whiteSpace: "nowrap",
   });
 
@@ -89,23 +94,14 @@ const Navbar = () => {
 
   const logoutStyle = {
     marginLeft: "8px",
-
     background: "rgba(239, 68, 68, 0.10)",
-
     color: "#fca5a5",
-
     border: "1px solid rgba(239, 68, 68, 0.35)",
-
     padding: "7px 14px",
-
     borderRadius: "7px",
-
     fontSize: "13px",
-
     fontWeight: "700",
-
     cursor: "pointer",
-
     whiteSpace: "nowrap",
   };
 
@@ -115,39 +111,42 @@ const Navbar = () => {
 
   const themeButtonStyle = {
     marginLeft: "8px",
-
     display: "inline-flex",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     background: "#065f46",
-
     color: "#d1fae5",
-
     border: "1px solid #047857",
-
     padding: "7px 13px",
-
     borderRadius: "7px",
-
     fontSize: "13px",
-
     fontWeight: "600",
-
     cursor: "pointer",
-
     whiteSpace: "nowrap",
-
     transition: "all 0.2s ease",
-
     flexShrink: 0,
+  };
+
+  // =====================================================
+  // ANALYTICS STYLE
+  // =====================================================
+
+  const analyticsButtonStyle = {
+    color: "#d1fae5",
+    textDecoration: "none",
+    fontWeight: "500",
+    fontSize: "14px",
+    padding: "8px 12px",
+    borderRadius: "7px",
+    transition: "all 0.2s ease",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
   };
 
   return (
     <nav className="cfms-navbar">
-
       <div className="navbar-container">
 
         {/* BRAND */}
@@ -161,7 +160,9 @@ const Navbar = () => {
           <strong>Voice</strong>
         </NavLink>
 
-        {/* DESKTOP MENU */}
+        {/* =================================================
+            DESKTOP MENU
+        ================================================= */}
 
         <div className="desktop-menu">
 
@@ -173,31 +174,57 @@ const Navbar = () => {
             Home
           </NavLink>
 
-          {/* CHANGED FROM LODGE COMPLAINT */}
+          {/* GUEST */}
 
-          <NavLink
-            to="/submit-complaint"
-            style={navLinkStyle}
-            onClick={handleNavigation}
-          >
-            Anonymous Complaint
-          </NavLink>
+          {role === "guest" && (
+            <>
+              <NavLink
+                to="/submit-complaint"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Anonymous Complaint
+              </NavLink>
 
-          <NavLink
-            to="/track-complaint"
-            style={navLinkStyle}
-            onClick={handleNavigation}
-          >
-            Track Complaint
-          </NavLink>
+              <NavLink
+                to="/track-complaint"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Track Complaint
+              </NavLink>
 
-          <NavLink
-            to="/feedback"
-            style={navLinkStyle}
-            onClick={handleNavigation}
-          >
-            Anonymous Feedback
-          </NavLink>
+              <NavLink
+                to="/feedback"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Anonymous Feedback
+              </NavLink>
+            </>
+          )}
+
+          {/* STUDENT */}
+
+          {role === "student" && (
+            <>
+              <NavLink
+                to="/track-complaint"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Track Complaint
+              </NavLink>
+
+              <NavLink
+                to="/student-dashboard"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Student Dashboard
+              </NavLink>
+            </>
+          )}
 
           {/* ADMIN */}
 
@@ -211,48 +238,36 @@ const Navbar = () => {
                 Admin Dashboard
               </NavLink>
 
-              <NavLink
-                to="/admin/feedback"
-                style={navLinkStyle}
-                onClick={handleNavigation}
+              <button
+                type="button"
+                onClick={handleAnalytics}
+                style={analyticsButtonStyle}
               >
                 Analytics
-              </NavLink>
-            </>
-          )}
-
-          {/* STUDENT */}
-
-          {role === "student" && (
-            <>
-              <NavLink
-                to="/student-dashboard"
-                style={navLinkStyle}
-                onClick={handleNavigation}
-              >
-                Student Dashboard
-              </NavLink>
-
-              <NavLink
-                to="/my-complaints"
-                style={navLinkStyle}
-                onClick={handleNavigation}
-              >
-                My Complaints
-              </NavLink>
+              </button>
             </>
           )}
 
           {/* STAFF */}
 
           {role === "staff" && (
-            <NavLink
-              to="/staff-dashboard"
-              style={navLinkStyle}
-              onClick={handleNavigation}
-            >
-              Staff Dashboard
-            </NavLink>
+            <>
+              <NavLink
+                to="/track-complaint"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Track Complaint
+              </NavLink>
+
+              <NavLink
+                to="/staff-dashboard"
+                style={navLinkStyle}
+                onClick={handleNavigation}
+              >
+                Staff Dashboard
+              </NavLink>
+            </>
           )}
 
           {/* THEME */}
@@ -276,6 +291,7 @@ const Navbar = () => {
               Logout
             </button>
           )}
+
         </div>
 
         {/* MOBILE BUTTON */}
@@ -293,7 +309,9 @@ const Navbar = () => {
 
       </div>
 
-      {/* MOBILE MENU */}
+      {/* =================================================
+          MOBILE MENU
+      ================================================= */}
 
       {mobileMenuOpen && (
         <div className="mobile-menu">
@@ -306,29 +324,59 @@ const Navbar = () => {
             Home
           </NavLink>
 
-          <NavLink
-            to="/submit-complaint"
-            onClick={handleNavigation}
-            style={navLinkStyle}
-          >
-            Anonymous Complaint
-          </NavLink>
+          {/* Guest */}
 
-          <NavLink
-            to="/track-complaint"
-            onClick={handleNavigation}
-            style={navLinkStyle}
-          >
-            Track Complaint
-          </NavLink>
+          {role === "guest" && (
+            <>
+              <NavLink
+                to="/submit-complaint"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Anonymous Complaint
+              </NavLink>
 
-          <NavLink
-            to="/feedback"
-            onClick={handleNavigation}
-            style={navLinkStyle}
-          >
-            Anonymous Feedback
-          </NavLink>
+              <NavLink
+                to="/track-complaint"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Track Complaint
+              </NavLink>
+
+              <NavLink
+                to="/feedback"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Anonymous Feedback
+              </NavLink>
+            </>
+          )}
+
+          {/* Student */}
+
+          {role === "student" && (
+            <>
+              <NavLink
+                to="/track-complaint"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Track Complaint
+              </NavLink>
+
+              <NavLink
+                to="/student-dashboard"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Student Dashboard
+              </NavLink>
+            </>
+          )}
+
+          {/* Admin */}
 
           {role === "admin" && (
             <>
@@ -340,45 +388,43 @@ const Navbar = () => {
                 Admin Dashboard
               </NavLink>
 
-              <NavLink
-                to="/admin/feedback"
-                onClick={handleNavigation}
-                style={navLinkStyle}
+              <button
+                type="button"
+                onClick={handleAnalytics}
+                style={{
+                  ...analyticsButtonStyle,
+                  width: "100%",
+                  textAlign: "left",
+                }}
               >
                 Analytics
-              </NavLink>
+              </button>
             </>
           )}
 
-          {role === "student" && (
-            <>
-              <NavLink
-                to="/student-dashboard"
-                onClick={handleNavigation}
-                style={navLinkStyle}
-              >
-                Student Dashboard
-              </NavLink>
-
-              <NavLink
-                to="/my-complaints"
-                onClick={handleNavigation}
-                style={navLinkStyle}
-              >
-                My Complaints
-              </NavLink>
-            </>
-          )}
+          {/* Staff */}
 
           {role === "staff" && (
-            <NavLink
-              to="/staff-dashboard"
-              onClick={handleNavigation}
-              style={navLinkStyle}
-            >
-              Staff Dashboard
-            </NavLink>
+            <>
+              <NavLink
+                to="/track-complaint"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Track Complaint
+              </NavLink>
+
+              <NavLink
+                to="/staff-dashboard"
+                onClick={handleNavigation}
+                style={navLinkStyle}
+              >
+                Staff Dashboard
+              </NavLink>
+            </>
           )}
+
+          {/* Theme */}
 
           <button
             type="button"
@@ -389,6 +435,8 @@ const Navbar = () => {
               ? "Switch to Dark Mode"
               : "Switch to Light Mode"}
           </button>
+
+          {/* Logout */}
 
           {role !== "guest" && (
             <button
@@ -431,13 +479,14 @@ const Navbar = () => {
         .cfms-brand {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 5px;
 
           color: #ffffff;
           text-decoration: none;
 
-          font-size: 18px;
+          font-size: 20px;
           font-weight: 700;
+
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -455,6 +504,7 @@ const Navbar = () => {
           align-items: center;
           justify-content: flex-end;
           gap: 3px;
+
           flex: 1;
           min-width: 0;
         }
@@ -463,7 +513,8 @@ const Navbar = () => {
           color: #d1fae5 !important;
         }
 
-        .desktop-menu a:hover {
+        .desktop-menu a:hover,
+        .desktop-menu button:hover {
           color: #ffffff !important;
           background: rgba(52, 211, 153, 0.15);
         }
@@ -478,6 +529,7 @@ const Navbar = () => {
 
           background: transparent;
           border: 1px solid #047857;
+
           color: #ffffff;
 
           padding: 7px 12px;
@@ -495,9 +547,11 @@ const Navbar = () => {
         .mobile-logout-button {
           width: 100%;
           margin-top: 8px;
+
           padding: 10px 12px;
 
           border-radius: 7px;
+
           font-size: 13px;
           font-weight: 600;
 
@@ -518,22 +572,21 @@ const Navbar = () => {
         }
 
         @media (max-width: 1150px) {
+
           .desktop-menu {
             gap: 1px;
           }
 
-          .desktop-menu a {
+          .desktop-menu a,
+          .desktop-menu button {
             font-size: 12px;
             padding: 7px 7px;
           }
 
-          .desktop-menu button {
-            font-size: 12px;
-            padding: 7px 8px;
-          }
         }
 
         @media (max-width: 950px) {
+
           .desktop-menu {
             display: none;
           }
@@ -558,26 +611,30 @@ const Navbar = () => {
           .navbar-container {
             height: 60px;
           }
+
         }
 
         @media (min-width: 951px) {
+
           .mobile-menu {
             display: none !important;
           }
+
         }
 
         @media (max-width: 500px) {
+
           .navbar-container {
             padding: 0 15px;
           }
 
           .cfms-brand {
-            font-size: 16px;
+            font-size: 18px;
           }
+
         }
 
       `}</style>
-
     </nav>
   );
 };

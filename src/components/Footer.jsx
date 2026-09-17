@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 
 const Footer = () => {
+  const role = localStorage.getItem("userRole") || "guest";
+  const isAdmin = role === "admin";
+
   return (
     <footer
       style={{
@@ -26,6 +29,7 @@ const Footer = () => {
             paddingBottom: "30px",
           }}
         >
+
           {/* BRAND */}
 
           <div>
@@ -68,13 +72,13 @@ const Footer = () => {
                 maxWidth: "330px",
               }}
             >
-              A centralized platform that helps students
-              raise concerns, share feedback and stay
-              connected with campus administration.
+              {isAdmin
+                ? "Administrative management portal for monitoring complaints, reviewing feedback and improving campus services."
+                : "A centralized platform that helps students raise concerns, share feedback and stay connected with campus administration."}
             </p>
           </div>
 
-          {/* EXPLORE */}
+          {/* PORTAL */}
 
           <div>
             <h4
@@ -84,7 +88,7 @@ const Footer = () => {
                 marginBottom: "14px",
               }}
             >
-              Explore
+              {isAdmin ? "Administration" : "Explore"}
             </h4>
 
             <div
@@ -94,42 +98,81 @@ const Footer = () => {
                 gap: "9px",
               }}
             >
-              <Link
-                to="/"
-                style={{
-                  color: "#a7f3d0",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                }}
-              >
-                Home
-              </Link>
+              {isAdmin ? (
+                <>
+                  <Link
+                    to="/admin-dashboard"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Admin Dashboard
+                  </Link>
 
-              <Link
-                to="/#features"
-                style={{
-                  color: "#a7f3d0",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                }}
-              >
-                Features
-              </Link>
+                  <Link
+                    to="/admin-dashboard"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Complaint Management
+                  </Link>
 
-              <Link
-                to="/#how-it-works"
-                style={{
-                  color: "#a7f3d0",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                }}
-              >
-                How It Works
-              </Link>
+                  <Link
+                    to="/admin-dashboard"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Feedback Management
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Home
+                  </Link>
+
+                  <Link
+                    to="/#features"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Features
+                  </Link>
+
+                  <Link
+                    to="/#how-it-works"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    How It Works
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
-          {/* ACCOUNT */}
+          {/* ACCOUNT / SYSTEM */}
 
           <div>
             <h4
@@ -139,7 +182,7 @@ const Footer = () => {
                 marginBottom: "14px",
               }}
             >
-              Account
+              {isAdmin ? "System" : "Account"}
             </h4>
 
             <div
@@ -149,29 +192,63 @@ const Footer = () => {
                 gap: "9px",
               }}
             >
-              <Link
-                to="/login"
-                style={{
-                  color: "#a7f3d0",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                }}
-              >
-                Student Login
-              </Link>
+              {isAdmin ? (
+                <>
+                  <span
+                    style={{
+                      color: "#a7f3d0",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Complaint Monitoring
+                  </span>
 
-              <Link
-                to="/register"
-                style={{
-                  color: "#a7f3d0",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                }}
-              >
-                Create Account
-              </Link>
+                  <span
+                    style={{
+                      color: "#a7f3d0",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Feedback Analysis
+                  </span>
+
+                  <span
+                    style={{
+                      color: "#6ee7b7",
+                      fontSize: "13px",
+                    }}
+                  >
+                    System Status: Active
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Student Login
+                  </Link>
+
+                  <Link
+                    to="/register"
+                    style={{
+                      color: "#a7f3d0",
+                      textDecoration: "none",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Create Account
+                  </Link>
+                </>
+              )}
             </div>
           </div>
+
         </div>
 
         {/* COPYRIGHT */}

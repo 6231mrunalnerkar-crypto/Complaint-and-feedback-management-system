@@ -1,22 +1,55 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import Navbar from "../components/Navbar";
 import { saveComplaint } from "../utils/mockData";
+import { getStoredCategories } from "../utils/categoryData";
 
 const GuestComplaint = () => {
   const navigate = useNavigate();
+
+  const [categories, setCategories] = useState(() =>
+    getStoredCategories()
+  );
 
   const [submitted, setSubmitted] = useState(false);
   const [referenceId, setReferenceId] = useState("");
 
   const [formData, setFormData] = useState({
-    category: "Library",
+    category:
+      getStoredCategories()[0] || "Other",
     priority: "Medium",
     subject: "",
     description: "",
   });
+
+  // =====================================================
+  // LOAD CATEGORIES
+  // =====================================================
+
+  useEffect(() => {
+    refreshCategories();
+  }, []);
+
+  const refreshCategories = () => {
+    const storedCategories = getStoredCategories();
+
+    setCategories(storedCategories);
+
+    setFormData((current) => ({
+      ...current,
+      category: storedCategories.includes(
+        current.category
+      )
+        ? current.category
+        : storedCategories[0] || "Other",
+    }));
+  };
+
+  // =====================================================
+  // SUBMIT
+  // =====================================================
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,7 +58,9 @@ const GuestComplaint = () => {
       !formData.subject.trim() ||
       !formData.description.trim()
     ) {
-      toast.error("Please fill in all required fields.");
+      toast.error(
+        "Please fill in all required fields."
+      );
       return;
     }
 
@@ -70,7 +105,6 @@ const GuestComplaint = () => {
         <Navbar />
 
         <div className="guest-page">
-
           <div className="guest-card success-card">
 
             <span className="page-label">
@@ -80,21 +114,26 @@ const GuestComplaint = () => {
             <h2>Complaint Submitted</h2>
 
             <p>
-              Your complaint has been submitted anonymously.
-              No personal information was required.
+              Your complaint has been submitted
+              anonymously. No personal information
+              was required.
             </p>
 
             <div className="reference-box">
 
-              <span>REFERENCE ID</span>
+              <span>
+                REFERENCE ID
+              </span>
 
-              <strong>{referenceId}</strong>
+              <strong>
+                {referenceId}
+              </strong>
 
             </div>
 
             <p className="reference-note">
-              Save this Reference ID to track your complaint
-              later.
+              Save this Reference ID to track your
+              complaint later.
             </p>
 
             <div className="guest-actions">
@@ -112,10 +151,19 @@ const GuestComplaint = () => {
 
               <button
                 onClick={() => {
+                  const currentCategories =
+                    getStoredCategories();
+
+                  setCategories(
+                    currentCategories
+                  );
+
                   setSubmitted(false);
 
                   setFormData({
-                    category: "Library",
+                    category:
+                      currentCategories[0] ||
+                      "Other",
                     priority: "Medium",
                     subject: "",
                     description: "",
@@ -127,7 +175,9 @@ const GuestComplaint = () => {
               </button>
 
               <button
-                onClick={() => navigate("/")}
+                onClick={() =>
+                  navigate("/")
+                }
                 className="home-action"
               >
                 Back to Home
@@ -136,7 +186,6 @@ const GuestComplaint = () => {
             </div>
 
           </div>
-
         </div>
       </>
     );
@@ -161,9 +210,9 @@ const GuestComplaint = () => {
             </div>
 
             <div className="notice-text">
-              No name, email, password, student ID, or account
-              is required. Your complaint will be submitted
-              anonymously.
+              No name, email, password, student ID,
+              or account is required. Your complaint
+              will be submitted anonymously.
             </div>
 
           </div>
@@ -174,7 +223,9 @@ const GuestComplaint = () => {
               CAMPUS CONCERN
             </span>
 
-            <h1>Anonymous Complaint</h1>
+            <h1>
+              Anonymous Complaint
+            </h1>
 
             <p>
               Report a campus concern directly to the
@@ -200,32 +251,25 @@ const GuestComplaint = () => {
 
                 <select
                   value={formData.category}
+                  onFocus={refreshCategories}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      category: e.target.value,
+                      category:
+                        e.target.value,
                     })
                   }
                 >
-                  <option value="Library">
-                    Library
-                  </option>
-
-                  <option value="Hostel">
-                    Hostel
-                  </option>
-
-                  <option value="Canteen">
-                    Canteen
-                  </option>
-
-                  <option value="Academic">
-                    Academic
-                  </option>
-
-                  <option value="Infrastructure">
-                    Infrastructure
-                  </option>
+                  {categories.map(
+                    (category) => (
+                      <option
+                        key={category}
+                        value={category}
+                      >
+                        {category}
+                      </option>
+                    )
+                  )}
                 </select>
 
               </div>
@@ -241,7 +285,8 @@ const GuestComplaint = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      priority: e.target.value,
+                      priority:
+                        e.target.value,
                     })
                   }
                 >
@@ -277,7 +322,8 @@ const GuestComplaint = () => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    subject: e.target.value,
+                    subject:
+                      e.target.value,
                   })
                 }
               />
@@ -295,11 +341,14 @@ const GuestComplaint = () => {
               <textarea
                 rows="6"
                 placeholder="Provide details about your concern..."
-                value={formData.description}
+                value={
+                  formData.description
+                }
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    description: e.target.value,
+                    description:
+                      e.target.value,
                   })
                 }
               />
@@ -317,7 +366,9 @@ const GuestComplaint = () => {
 
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() =>
+              navigate("/")
+            }
             className="back-home-btn"
           >
             Back to Home
@@ -530,7 +581,6 @@ const GuestComplaint = () => {
 
         .success-card h2 {
           margin: 10px 0;
-
           font-size: 28px;
         }
 

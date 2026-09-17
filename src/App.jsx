@@ -16,6 +16,7 @@ import Feedback from "./pages/Feedback";
 import MyComplaints from "./pages/MyComplaints";
 import AdminFeedback from "./pages/AdminFeedback";
 import GuestDashboard from "./pages/GuestDashboard";
+import StudentFeedback from "./pages/StudentFeedback";
 
 import Profile from "./pages/profile";
 
@@ -47,6 +48,12 @@ function App() {
         <Route
           path="/feedback"
           element={<Feedback />}
+        />
+
+
+        <Route
+          path="/student-feedback"
+          element={<StudentFeedback />}
         />
 
         <Route

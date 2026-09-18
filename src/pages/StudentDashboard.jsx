@@ -24,7 +24,9 @@ const StudentDashboard = () => {
 
   const [user] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("cfms_user")) || null;
+      return (
+        JSON.parse(localStorage.getItem("cfms_user")) || null
+      );
     } catch {
       return null;
     }
@@ -66,6 +68,10 @@ const StudentDashboard = () => {
   const [feedbackComment, setFeedbackComment] =
     useState("");
 
+  /* =========================================
+     STUDENT INFORMATION
+  ========================================= */
+
   const displayName =
     user?.name ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
@@ -74,6 +80,10 @@ const StudentDashboard = () => {
 
   const studentInitial =
     displayName.charAt(0).toUpperCase();
+
+  /* =========================================
+     CATEGORIES
+  ========================================= */
 
   const availableCategories =
     categories?.length > 0
@@ -89,6 +99,10 @@ const StudentDashboard = () => {
           "Campus Crime",
           "Faculty Complaints",
         ];
+
+  /* =========================================
+     STUDENT COMPLAINTS
+  ========================================= */
 
   const studentComplaints = useMemo(() => {
     const studentName =
@@ -119,6 +133,10 @@ const StudentDashboard = () => {
       });
   }, [complaints, user]);
 
+  /* =========================================
+     STUDENT FEEDBACKS
+  ========================================= */
+
   const studentFeedbacks = useMemo(() => {
     const studentName =
       user?.name ||
@@ -148,31 +166,50 @@ const StudentDashboard = () => {
       });
   }, [feedbacks, user]);
 
-  const totalComplaints = studentComplaints.length;
+  /* =========================================
+     COMPLAINT STATISTICS
+  ========================================= */
 
-  const pendingComplaints = studentComplaints.filter(
-    (complaint) =>
-      complaint.status === "Pending"
-  ).length;
+  const totalComplaints =
+    studentComplaints.length;
 
-  const inProgressComplaints = studentComplaints.filter(
-    (complaint) =>
-      complaint.status === "In Progress" ||
-      complaint.status === "In-Progress"
-  ).length;
+  const pendingComplaints =
+    studentComplaints.filter(
+      (complaint) =>
+        complaint.status === "Pending"
+    ).length;
 
-  const resolvedComplaints = studentComplaints.filter(
-    (complaint) =>
-      complaint.status === "Resolved"
-  ).length;
+  const inProgressComplaints =
+    studentComplaints.filter(
+      (complaint) =>
+        complaint.status === "In Progress" ||
+        complaint.status === "In-Progress"
+    ).length;
+
+  const resolvedComplaints =
+    studentComplaints.filter(
+      (complaint) =>
+        complaint.status === "Resolved" ||
+        complaint.status === "Completed"
+    ).length;
+
+  /* =========================================
+     LOGOUT
+  ========================================= */
 
   const handleLogout = () => {
     localStorage.removeItem("cfms_user");
 
-    toast.success("Logged out successfully");
+    toast.success(
+      "Logged out successfully"
+    );
 
     navigate("/login");
   };
+
+  /* =========================================
+     COMPLAINT FORM
+  ========================================= */
 
   const handleComplaintChange = (event) => {
     const { name, value } = event.target;
@@ -193,6 +230,7 @@ const StudentDashboard = () => {
       toast.error(
         "Please enter complaint title and description."
       );
+
       return;
     }
 
@@ -208,17 +246,32 @@ const StudentDashboard = () => {
 
     const complaint = {
       id: complaintId,
+
       title: newComplaint.title.trim(),
+
       subject: newComplaint.title.trim(),
+
       category: newComplaint.category,
+
       priority: newComplaint.priority,
-      description: newComplaint.description.trim(),
+
+      description:
+        newComplaint.description.trim(),
+
       status: "Pending",
+
       anonymous: false,
+
       submittedBy: studentName,
+
       studentId: user?.studentId || "",
+
       email: user?.email || "",
-      date: new Date().toISOString().split("T")[0],
+
+      date: new Date()
+        .toISOString()
+        .split("T")[0],
+
       createdAt: new Date().toISOString(),
     };
 
@@ -240,80 +293,118 @@ const StudentDashboard = () => {
     );
   };
 
+  /* =========================================
+     FEEDBACK MODAL
+  ========================================= */
+
   const openFeedbackModal = () => {
     if (!studentComplaints.length) {
       toast.error(
         "You need to submit a complaint first."
       );
+
       return;
     }
 
-    const resolvedComplaint = studentComplaints.find(
-      (complaint) =>
-        complaint.status === "Resolved" &&
-        !hasSubmittedFeedback(complaint.id)
-    );
+    const resolvedComplaint =
+      studentComplaints.find(
+        (complaint) =>
+          (complaint.status === "Resolved" ||
+            complaint.status === "Completed") &&
+          !hasSubmittedFeedback(
+            complaint.id
+          )
+      );
 
     if (!resolvedComplaint) {
       toast.error(
         "Feedback can only be submitted for a resolved complaint."
       );
+
       return;
     }
 
-    setFeedbackComplaintId(resolvedComplaint.id);
+    setFeedbackComplaintId(
+      resolvedComplaint.id
+    );
 
     setFeedbackCategory(
-      resolvedComplaint.category || "General"
+      resolvedComplaint.category ||
+        "General"
     );
 
     setFeedbackRating(0);
+
     setFeedbackComment("");
 
     setShowFeedbackModal(true);
   };
 
+  /* =========================================
+     FEEDBACK SUBMIT
+  ========================================= */
+
   const handleFeedbackSubmit = (event) => {
     event.preventDefault();
 
     if (!feedbackComplaintId) {
-      toast.error("Please select a complaint.");
+      toast.error(
+        "Please select a complaint."
+      );
+
       return;
     }
 
-    const complaint = studentComplaints.find(
-      (item) =>
-        item.id === feedbackComplaintId
-    );
+    const complaint =
+      studentComplaints.find(
+        (item) =>
+          item.id === feedbackComplaintId
+      );
 
     if (!complaint) {
-      toast.error("Complaint not found.");
-      return;
-    }
-
-    if (complaint.status !== "Resolved") {
       toast.error(
-        "Feedback can only be submitted after the complaint is resolved."
+        "Complaint not found."
       );
+
       return;
     }
 
     if (
-      hasSubmittedFeedback(feedbackComplaintId)
+      complaint.status !== "Resolved" &&
+      complaint.status !== "Completed"
+    ) {
+      toast.error(
+        "Feedback can only be submitted after the complaint is resolved."
+      );
+
+      return;
+    }
+
+    if (
+      hasSubmittedFeedback(
+        feedbackComplaintId
+      )
     ) {
       toast.error(
         "Feedback has already been submitted for this complaint."
       );
+
       return;
     }
 
     if (!feedbackComment.trim()) {
-      toast.error("Please enter your feedback.");
+      toast.error(
+        "Please enter your feedback."
+      );
+
       return;
     }
 
     if (!feedbackRating) {
-      toast.error("Please select a rating.");
+      toast.error(
+        "Please select a rating."
+      );
+
       return;
     }
 
@@ -327,35 +418,66 @@ const StudentDashboard = () => {
       id: `FDB-${Math.floor(
         1000 + Math.random() * 9000
       )}`,
-      complaintId: feedbackComplaintId,
+
+      complaintId:
+        feedbackComplaintId,
+
       category: feedbackCategory,
+
       rating: feedbackRating,
-      comment: feedbackComment.trim(),
+
+      comment:
+        feedbackComment.trim(),
+
       anonymous: false,
+
       submittedBy: studentName,
-      studentId: user?.studentId || "",
-      email: user?.email || "",
-      date: new Date().toISOString().split("T")[0],
-      createdAt: new Date().toISOString(),
+
+      studentId:
+        user?.studentId || "",
+
+      email:
+        user?.email || "",
+
+      date: new Date()
+        .toISOString()
+        .split("T")[0],
+
+      createdAt:
+        new Date().toISOString(),
     };
 
     saveFeedback(feedback);
 
-    setFeedbacks(getStoredFeedback());
+    setFeedbacks(
+      getStoredFeedback()
+    );
 
     setShowFeedbackModal(false);
 
     setFeedbackComplaintId("");
+
     setFeedbackRating(0);
-    setFeedbackCategory("General");
+
+    setFeedbackCategory(
+      "General"
+    );
+
     setFeedbackComment("");
 
-    toast.success("Feedback submitted successfully.");
+    toast.success(
+      "Feedback submitted successfully."
+    );
   };
+
+  /* =========================================
+     STATUS STYLE
+  ========================================= */
 
   const getStatusClass = (status) => {
     switch (status) {
       case "Resolved":
+      case "Completed":
         return "status-badge resolved";
 
       case "In Progress":
@@ -367,6 +489,10 @@ const StudentDashboard = () => {
         return "status-badge pending";
     }
   };
+
+  /* =========================================
+     PRIORITY STYLE
+  ========================================= */
 
   const getPriorityClass = (priority) => {
     switch (priority) {
@@ -397,23 +523,42 @@ const StudentDashboard = () => {
           <div className="sidebar-top">
 
             <div className="sidebar-brand">
+
               <div className="sidebar-brand-mark">
                 C
               </div>
 
-              <strong>CampusVoice</strong>
+              <strong>
+                CampusVoice
+              </strong>
 
-              <span>Student Portal</span>
+              <span>
+                Student Portal
+              </span>
+
             </div>
 
+
             <div className="sidebar-status">
+
               <span className="sidebar-status-dot"></span>
 
               <div>
-                <strong>Student Status</strong>
-                <span>Active</span>
+                <strong>
+                  Student Status
+                </strong>
+
+                <span>
+                  Active
+                </span>
               </div>
+
             </div>
+
+
+            {/* =========================================
+                FIXED ROUTING
+            ========================================= */}
 
             <nav className="sidebar-menu">
 
@@ -425,21 +570,21 @@ const StudentDashboard = () => {
               </Link>
 
               <Link
-                to="/student-dashboard"
+                to="/my-complaints"
                 className="sidebar-menu-item"
               >
                 My Complaints
               </Link>
 
               <Link
-                to="/student-dashboard"
+                to="/my-feedbacks"
                 className="sidebar-menu-item"
               >
                 My Feedbacks
               </Link>
 
               <Link
-                to="/student-dashboard"
+                to="/profile"
                 className="sidebar-menu-item"
               >
                 Profile
@@ -449,12 +594,20 @@ const StudentDashboard = () => {
 
           </div>
 
+
           <div className="sidebar-bottom">
 
             <div className="sidebar-help">
-              <strong>Need Help?</strong>
-              Contact the administration for assistance with your complaints.
+
+              <strong>
+                Need Help?
+              </strong>
+
+              Contact the administration for
+              assistance with your complaints.
+
             </div>
+
 
             <button
               type="button"
@@ -470,18 +623,21 @@ const StudentDashboard = () => {
 
 
         {/* =========================================
-            RIGHT SIDE: DASHBOARD + FOOTER
+            RIGHT SIDE
         ========================================= */}
 
         <div className="dashboard-main-area">
 
           <main className="dashboard-content">
 
-            {/* HEADER */}
+            {/* =========================================
+                HEADER
+            ========================================= */}
 
             <section className="dashboard-header">
 
               <div>
+
                 <span className="section-eyebrow">
                   STUDENT DASHBOARD
                 </span>
@@ -491,10 +647,12 @@ const StudentDashboard = () => {
                 </h1>
 
                 <p>
-                  Manage your complaints, feedback and
-                  student account from one place.
+                  Manage your complaints, feedback
+                  and student account from one place.
                 </p>
+
               </div>
+
 
               <button
                 type="button"
@@ -509,15 +667,20 @@ const StudentDashboard = () => {
             </section>
 
 
-            {/* STATISTICS */}
+            {/* =========================================
+                STATISTICS
+            ========================================= */}
 
             <section className="dashboard-stats">
 
               <div className="stat-card">
+
                 <div className="stat-card-top">
+
                   <span className="stat-label">
                     Total Complaints
                   </span>
+
                 </div>
 
                 <strong className="stat-value">
@@ -527,14 +690,18 @@ const StudentDashboard = () => {
                 <span className="stat-description">
                   Complaints submitted by you
                 </span>
+
               </div>
 
 
               <div className="stat-card">
+
                 <div className="stat-card-top">
+
                   <span className="stat-label">
                     Pending
                   </span>
+
                 </div>
 
                 <strong className="stat-value">
@@ -544,14 +711,18 @@ const StudentDashboard = () => {
                 <span className="stat-description">
                   Awaiting action
                 </span>
+
               </div>
 
 
               <div className="stat-card">
+
                 <div className="stat-card-top">
+
                   <span className="stat-label">
                     In Progress
                   </span>
+
                 </div>
 
                 <strong className="stat-value">
@@ -561,14 +732,18 @@ const StudentDashboard = () => {
                 <span className="stat-description">
                   Currently being handled
                 </span>
+
               </div>
 
 
               <div className="stat-card">
+
                 <div className="stat-card-top">
+
                   <span className="stat-label">
                     Resolved
                   </span>
+
                 </div>
 
                 <strong className="stat-value">
@@ -578,12 +753,15 @@ const StudentDashboard = () => {
                 <span className="stat-description">
                   Successfully resolved
                 </span>
+
               </div>
 
             </section>
 
 
-            {/* STUDENT STATUS */}
+            {/* =========================================
+                STUDENT STATUS
+            ========================================= */}
 
             <section className="student-status-card">
 
@@ -594,18 +772,23 @@ const StudentDashboard = () => {
                 </div>
 
                 <div>
+
                   <span className="section-eyebrow">
                     STUDENT STATUS
                   </span>
 
-                  <h2>{displayName}</h2>
+                  <h2>
+                    {displayName}
+                  </h2>
 
                   <p>
                     Active student account on CampusVoice.
                   </p>
+
                 </div>
 
               </div>
+
 
               <span className="student-online-status">
                 Active
@@ -614,24 +797,31 @@ const StudentDashboard = () => {
             </section>
 
 
-            {/* MY COMPLAINTS */}
+            {/* =========================================
+                MY COMPLAINTS
+            ========================================= */}
 
             <section className="dashboard-section">
 
               <div className="section-heading">
 
                 <div>
+
                   <span className="section-eyebrow">
                     COMPLAINT MANAGEMENT
                   </span>
 
-                  <h2>My Complaints</h2>
+                  <h2>
+                    My Complaints
+                  </h2>
 
                   <p>
-                    View and track the complaints submitted
-                    from your student account.
+                    View and track the complaints
+                    submitted from your student account.
                   </p>
+
                 </div>
+
 
                 <button
                   type="button"
@@ -649,7 +839,10 @@ const StudentDashboard = () => {
               {studentComplaints.length === 0 ? (
 
                 <div className="empty-state">
-                  <h3>No complaints yet</h3>
+
+                  <h3>
+                    No complaints yet
+                  </h3>
 
                   <p>
                     You have not submitted any complaints.
@@ -664,6 +857,7 @@ const StudentDashboard = () => {
                   >
                     Lodge Your First Complaint
                   </button>
+
                 </div>
 
               ) : (
@@ -673,29 +867,59 @@ const StudentDashboard = () => {
                   <table className="complaints-table">
 
                     <thead>
+
                       <tr>
-                        <th>ID</th>
-                        <th>Complaint</th>
-                        <th>Category</th>
-                        <th>Date</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Action</th>
+
+                        <th>
+                          ID
+                        </th>
+
+                        <th>
+                          Complaint
+                        </th>
+
+                        <th>
+                          Category
+                        </th>
+
+                        <th>
+                          Date
+                        </th>
+
+                        <th>
+                          Priority
+                        </th>
+
+                        <th>
+                          Status
+                        </th>
+
+                        <th>
+                          Action
+                        </th>
+
                       </tr>
+
                     </thead>
+
 
                     <tbody>
 
                       {studentComplaints.map(
                         (complaint) => (
 
-                          <tr key={complaint.id}>
+                          <tr
+                            key={complaint.id}
+                          >
 
                             <td>
+
                               <strong className="complaint-id">
                                 {complaint.id}
                               </strong>
+
                             </td>
+
 
                             <td>
 
@@ -723,16 +947,21 @@ const StudentDashboard = () => {
 
                             </td>
 
+
                             <td>
                               {complaint.category ||
                                 "General"}
                             </td>
 
-                            <td>
-                              {complaint.date || "—"}
-                            </td>
 
                             <td>
+                              {complaint.date ||
+                                "—"}
+                            </td>
+
+
+                            <td>
+
                               <span
                                 className={getPriorityClass(
                                   complaint.priority
@@ -741,9 +970,12 @@ const StudentDashboard = () => {
                                 {complaint.priority ||
                                   "Medium"}
                               </span>
+
                             </td>
 
+
                             <td>
+
                               <span
                                 className={getStatusClass(
                                   complaint.status
@@ -752,15 +984,19 @@ const StudentDashboard = () => {
                                 {complaint.status ||
                                   "Pending"}
                               </span>
+
                             </td>
 
+
                             <td>
+
                               <Link
                                 to={`/track-complaint?id=${complaint.id}`}
                                 className="track-link"
                               >
                                 Track
                               </Link>
+
                             </td>
 
                           </tr>
@@ -779,24 +1015,31 @@ const StudentDashboard = () => {
             </section>
 
 
-            {/* MY FEEDBACKS */}
+            {/* =========================================
+                MY FEEDBACKS
+            ========================================= */}
 
             <section className="dashboard-section">
 
               <div className="section-heading">
 
                 <div>
+
                   <span className="section-eyebrow">
                     FEEDBACK
                   </span>
 
-                  <h2>My Feedbacks</h2>
+                  <h2>
+                    My Feedbacks
+                  </h2>
 
                   <p>
                     Review feedback submitted for your
                     resolved complaints.
                   </p>
+
                 </div>
+
 
                 <button
                   type="button"
@@ -812,12 +1055,16 @@ const StudentDashboard = () => {
               {studentFeedbacks.length === 0 ? (
 
                 <div className="empty-state">
-                  <h3>No feedback submitted</h3>
+
+                  <h3>
+                    No feedback submitted
+                  </h3>
 
                   <p>
-                    Feedback becomes available after a
-                    complaint is resolved.
+                    Feedback becomes available after
+                    a complaint is resolved.
                   </p>
+
                 </div>
 
               ) : (
@@ -838,6 +1085,7 @@ const StudentDashboard = () => {
                         <div className="feedback-card-header">
 
                           <div>
+
                             <span className="feedback-complaint-id">
                               {feedback.complaintId}
                             </span>
@@ -846,7 +1094,9 @@ const StudentDashboard = () => {
                               {feedback.category ||
                                 "General"}
                             </h3>
+
                           </div>
+
 
                           <span className="feedback-rating">
                             {feedback.rating}/5
@@ -854,14 +1104,18 @@ const StudentDashboard = () => {
 
                         </div>
 
+
                         <p className="feedback-comment">
                           {feedback.comment ||
                             "No comment provided."}
                         </p>
 
+
                         <div className="feedback-card-footer">
+
                           <span>
-                            {feedback.date || "—"}
+                            {feedback.date ||
+                              "—"}
                           </span>
 
                           <span>
@@ -870,6 +1124,7 @@ const StudentDashboard = () => {
                               ? "Yes"
                               : "No"}
                           </span>
+
                         </div>
 
                       </div>
@@ -884,23 +1139,29 @@ const StudentDashboard = () => {
             </section>
 
 
-            {/* PROFILE PREVIEW */}
+            {/* =========================================
+                PROFILE PREVIEW
+            ========================================= */}
 
             <section className="dashboard-section">
 
               <div className="section-heading">
 
                 <div>
+
                   <span className="section-eyebrow">
                     ACCOUNT
                   </span>
 
-                  <h2>Profile Preview</h2>
+                  <h2>
+                    Profile Preview
+                  </h2>
 
                   <p>
                     Information associated with your
                     CampusVoice student account.
                   </p>
+
                 </div>
 
               </div>
@@ -912,32 +1173,60 @@ const StudentDashboard = () => {
                   {studentInitial}
                 </div>
 
+
                 <div className="profile-preview-details">
 
                   <div>
-                    <span>Full Name</span>
-                    <strong>{displayName}</strong>
+
+                    <span>
+                      Full Name
+                    </span>
+
+                    <strong>
+                      {displayName}
+                    </strong>
+
                   </div>
 
+
                   <div>
-                    <span>Student ID</span>
+
+                    <span>
+                      Student ID
+                    </span>
+
                     <strong>
                       {user?.studentId ||
                         "Not available"}
                     </strong>
+
                   </div>
 
+
                   <div>
-                    <span>Email</span>
+
+                    <span>
+                      Email
+                    </span>
+
                     <strong>
                       {user?.email ||
                         "Not available"}
                     </strong>
+
                   </div>
 
+
                   <div>
-                    <span>Role</span>
-                    <strong>Student</strong>
+
+                    <span>
+                      Role
+                    </span>
+
+                    <strong>
+                      Student
+                    </strong>
+
                   </div>
 
                 </div>
@@ -947,18 +1236,24 @@ const StudentDashboard = () => {
             </section>
 
 
-            {/* QUICK ACTIONS */}
+            {/* =========================================
+                QUICK ACTIONS
+            ========================================= */}
 
             <section className="dashboard-section">
 
               <div className="section-heading">
 
                 <div>
+
                   <span className="section-eyebrow">
                     QUICK ACCESS
                   </span>
 
-                  <h2>Quick Actions</h2>
+                  <h2>
+                    Quick Actions
+                  </h2>
+
                 </div>
 
               </div>
@@ -973,6 +1268,7 @@ const StudentDashboard = () => {
                     setShowComplaintModal(true)
                   }
                 >
+
                   <strong>
                     Lodge Complaint
                   </strong>
@@ -980,6 +1276,7 @@ const StudentDashboard = () => {
                   <span>
                     Submit a new complaint
                   </span>
+
                 </button>
 
 
@@ -987,6 +1284,7 @@ const StudentDashboard = () => {
                   to="/track-complaint"
                   className="quick-action-card"
                 >
+
                   <strong>
                     Track Complaint
                   </strong>
@@ -994,6 +1292,7 @@ const StudentDashboard = () => {
                   <span>
                     Check complaint status
                   </span>
+
                 </Link>
 
 
@@ -1002,6 +1301,7 @@ const StudentDashboard = () => {
                   className="quick-action-card"
                   onClick={openFeedbackModal}
                 >
+
                   <strong>
                     Give Feedback
                   </strong>
@@ -1009,6 +1309,7 @@ const StudentDashboard = () => {
                   <span>
                     Share your experience
                   </span>
+
                 </button>
 
 
@@ -1016,6 +1317,7 @@ const StudentDashboard = () => {
                   to="/"
                   className="quick-action-card"
                 >
+
                   <strong>
                     CampusVoice Home
                   </strong>
@@ -1023,6 +1325,7 @@ const StudentDashboard = () => {
                   <span>
                     Return to homepage
                   </span>
+
                 </Link>
 
               </div>
@@ -1032,7 +1335,7 @@ const StudentDashboard = () => {
           </main>
 
 
-          {/* FOOTER ONLY BELONGS TO RIGHT CONTENT AREA */}
+          {/* FOOTER */}
 
           <div className="dashboard-footer-wrapper">
             <Footer />
@@ -1066,12 +1369,17 @@ const StudentDashboard = () => {
             <div className="modal-header">
 
               <div>
+
                 <span className="section-eyebrow">
                   NEW SUBMISSION
                 </span>
 
-                <h2>Lodge Complaint</h2>
+                <h2>
+                  Lodge Complaint
+                </h2>
+
               </div>
+
 
               <button
                 type="button"
@@ -1152,6 +1460,7 @@ const StudentDashboard = () => {
                     value={newComplaint.priority}
                     onChange={handleComplaintChange}
                   >
+
                     <option value="Low">
                       Low
                     </option>
@@ -1163,6 +1472,7 @@ const StudentDashboard = () => {
                     <option value="High">
                       High
                     </option>
+
                   </select>
 
                 </div>
@@ -1199,6 +1509,7 @@ const StudentDashboard = () => {
                 >
                   Cancel
                 </button>
+
 
                 <button
                   type="submit"
@@ -1241,12 +1552,17 @@ const StudentDashboard = () => {
             <div className="modal-header">
 
               <div>
+
                 <span className="section-eyebrow">
                   FEEDBACK
                 </span>
 
-                <h2>Give Feedback</h2>
+                <h2>
+                  Give Feedback
+                </h2>
+
               </div>
+
 
               <button
                 type="button"
@@ -1285,13 +1601,18 @@ const StudentDashboard = () => {
                   {studentComplaints
                     .filter(
                       (complaint) =>
-                        complaint.status ===
-                          "Resolved" &&
+                        (
+                          complaint.status ===
+                            "Resolved" ||
+                          complaint.status ===
+                            "Completed"
+                        ) &&
                         !hasSubmittedFeedback(
                           complaint.id
                         )
                     )
                     .map((complaint) => (
+
                       <option
                         key={complaint.id}
                         value={complaint.id}
@@ -1301,6 +1622,7 @@ const StudentDashboard = () => {
                           complaint.subject ||
                           "Complaint"}
                       </option>
+
                     ))}
 
                 </select>
@@ -1330,12 +1652,14 @@ const StudentDashboard = () => {
 
                   {availableCategories.map(
                     (category) => (
+
                       <option
                         key={category}
                         value={category}
                       >
                         {category}
                       </option>
+
                     )
                   )}
 
@@ -1412,6 +1736,7 @@ const StudentDashboard = () => {
                 >
                   Cancel
                 </button>
+
 
                 <button
                   type="submit"

@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -14,6 +19,8 @@ import TrackComplaint from "./pages/TrackComplaint";
 import Feedback from "./pages/Feedback";
 
 import MyComplaints from "./pages/MyComplaints";
+import MyFeedbacks from "./pages/MyFeedbacks";
+
 import AdminFeedback from "./pages/AdminFeedback";
 import GuestDashboard from "./pages/GuestDashboard";
 import StudentFeedback from "./pages/StudentFeedback";
@@ -23,17 +30,37 @@ import Profile from "./pages/profile";
 function App() {
   return (
     <Router>
+
       <Routes>
 
-        <Route path="/" element={<Home />} />
+        {/* =========================================
+            GENERAL
+        ========================================= */}
 
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        <Route path="/about" element={<About />} />
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
-        {/* Student Services */}
+        <Route
+          path="/about"
+          element={<About />}
+        />
+
+
+        {/* =========================================
+            STUDENT SERVICES
+        ========================================= */}
 
         <Route
           path="/submit-complaint"
@@ -45,12 +72,13 @@ function App() {
           element={<TrackComplaint />}
         />
 
+        {/* Anonymous feedback */}
         <Route
           path="/feedback"
           element={<Feedback />}
         />
 
-
+        {/* Student feedback submission */}
         <Route
           path="/student-feedback"
           element={<StudentFeedback />}
@@ -61,7 +89,10 @@ function App() {
           element={<Profile />}
         />
 
-        {/* Student Dashboard */}
+
+        {/* =========================================
+            STUDENT DASHBOARD
+        ========================================= */}
 
         <Route
           path="/student-dashboard"
@@ -73,14 +104,25 @@ function App() {
           element={<MyComplaints />}
         />
 
-        {/* Staff */}
+        <Route
+          path="/my-feedbacks"
+          element={<MyFeedbacks />}
+        />
+
+
+        {/* =========================================
+            STAFF
+        ========================================= */}
 
         <Route
           path="/staff-dashboard"
           element={<StaffDashboard />}
         />
 
-        {/* Admin */}
+
+        {/* =========================================
+            ADMIN
+        ========================================= */}
 
         <Route
           path="/admin-dashboard"
@@ -102,21 +144,33 @@ function App() {
           element={<AdminFeedback />}
         />
 
-        {/* Guest */}
+
+        {/* =========================================
+            GUEST
+        ========================================= */}
 
         <Route
           path="/guest-dashboard"
           element={<GuestDashboard />}
         />
 
-        {/* Fallback */}
+
+        {/* =========================================
+            FALLBACK
+        ========================================= */}
 
         <Route
           path="*"
-          element={<Navigate to="/" replace />}
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
         />
 
       </Routes>
+
     </Router>
   );
 }

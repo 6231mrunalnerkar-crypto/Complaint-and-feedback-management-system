@@ -17,209 +17,162 @@ import {
   hasSubmittedFeedback,
 } from "../utils/feedbackData";
 
-import {
-  getStoredCategories,
-} from "../utils/categoryData";
+import { getStoredCategories } from "../utils/categoryData";
 
-function StudentDashboard() {
+const StudentDashboard = () => {
   const navigate = useNavigate();
-
-  // =====================================================
-  // CATEGORIES
-  // =====================================================
-
-  const [categories, setCategories] = useState(() => {
-    try {
-      const data = getStoredCategories();
-      return Array.isArray(data) && data.length > 0
-        ? data
-        : ["Other"];
-    } catch (error) {
-      console.error("Unable to load categories:", error);
-      return ["Other"];
-    }
-  });
-
-  // =====================================================
-  // COMPLAINTS
-  // =====================================================
-
-  const [complaints, setComplaints] = useState(() => {
-    try {
-      const data = getStoredComplaints();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error("Unable to load complaints:", error);
-      return [];
-    }
-  });
-
-  // =====================================================
-  // FEEDBACKS
-  // =====================================================
-
-  const [feedbacks, setFeedbacks] = useState(() => {
-    try {
-      const data = getStoredFeedback();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error("Unable to load feedback:", error);
-      return [];
-    }
-  });
-
-  // =====================================================
-  // COMPLAINT MODAL
-  // =====================================================
-
-  const [showModal, setShowModal] = useState(false);
-
-  const [newComplaint, setNewComplaint] = useState(() => {
-    const storedCategories = getStoredCategories();
-
-    return {
-      title: "",
-      category: storedCategories[0] || "Other",
-      priority: "Medium",
-      description: "",
-    };
-  });
-
-  // =====================================================
-  // FEEDBACK MODAL
-  // =====================================================
-
-  const [showFeedbackModal, setShowFeedbackModal] =
-    useState(false);
-
-  const [feedbackComplaintId, setFeedbackComplaintId] =
-    useState("");
-
-  const [feedbackRating, setFeedbackRating] =
-    useState(5);
-
-  const [feedbackCategory, setFeedbackCategory] =
-    useState(() => {
-      const storedCategories = getStoredCategories();
-      return storedCategories[0] || "Other";
-    });
-
-  const [feedbackComment, setFeedbackComment] =
-    useState("");
-
-  const [feedbackVerified, setFeedbackVerified] =
-    useState(false);
-
-  const [feedbackVerificationMessage, setFeedbackVerificationMessage] =
-    useState("");
-
-  const [feedbackVerificationType, setFeedbackVerificationType] =
-    useState("");
-
-  // =====================================================
-  // USER
-  // =====================================================
 
   const [user] = useState(() => {
     try {
-      const storedUser = localStorage.getItem("cfms_user");
-
-      if (!storedUser) return null;
-
-      const parsedUser = JSON.parse(storedUser);
-
-      return parsedUser &&
-        typeof parsedUser === "object"
-        ? parsedUser
-        : null;
-    } catch (error) {
-      console.error("Unable to load user:", error);
+      return JSON.parse(localStorage.getItem("cfms_user")) || null;
+    } catch {
       return null;
     }
   });
 
-  // =====================================================
-  // REFRESH CATEGORIES
-  // =====================================================
+  const [complaints, setComplaints] = useState(() =>
+    getStoredComplaints()
+  );
 
-  const refreshCategories = () => {
-    try {
-      const storedCategories = getStoredCategories();
+  const [feedbacks, setFeedbacks] = useState(() =>
+    getStoredFeedback()
+  );
 
-      const updatedCategories =
-        storedCategories.length > 0
-          ? storedCategories
-          : ["Other"];
+  const [categories] = useState(() =>
+    getStoredCategories()
+  );
 
-      setCategories(updatedCategories);
+  const [showComplaintModal, setShowComplaintModal] =
+    useState(false);
 
-      setNewComplaint((previous) => ({
-        ...previous,
-        category: updatedCategories.includes(
-          previous.category
-        )
-          ? previous.category
-          : updatedCategories[0],
-      }));
+  const [showFeedbackModal, setShowFeedbackModal] =
+    useState(false);
 
-      setFeedbackCategory((previous) =>
-        updatedCategories.includes(previous)
-          ? previous
-          : updatedCategories[0]
-      );
-    } catch (error) {
-      console.error("Unable to refresh categories:", error);
-    }
+  const [newComplaint, setNewComplaint] = useState({
+    title: "",
+    category: "Infrastructure",
+    priority: "Medium",
+    description: "",
+  });
+
+  const [feedbackComplaintId, setFeedbackComplaintId] =
+    useState("");
+
+  const [feedbackRating, setFeedbackRating] = useState(0);
+
+  const [feedbackCategory, setFeedbackCategory] =
+    useState("General");
+
+  const [feedbackComment, setFeedbackComment] =
+    useState("");
+
+  const displayName =
+    user?.name ||
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+    user?.fullName ||
+    "Student";
+
+  const studentInitial =
+    displayName.charAt(0).toUpperCase();
+
+  const availableCategories =
+    categories?.length > 0
+      ? categories
+      : [
+          "Infrastructure",
+          "Library",
+          "Canteen",
+          "Academic",
+          "Appliances",
+          "Ragging-related",
+          "Molestation-related",
+          "Campus Crime",
+          "Faculty Complaints",
+        ];
+
+  const studentComplaints = useMemo(() => {
+    const studentName =
+      user?.name ||
+      user?.fullName ||
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+
+    return complaints
+      .filter((complaint) => {
+        if (complaint.anonymous) return false;
+
+        return (
+          complaint.submittedBy === studentName ||
+          complaint.studentId === user?.studentId ||
+          complaint.email === user?.email
+        );
+      })
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.date || a.createdAt || 0
+        ).getTime();
+
+        const dateB = new Date(
+          b.date || b.createdAt || 0
+        ).getTime();
+
+        return dateB - dateA;
+      });
+  }, [complaints, user]);
+
+  const studentFeedbacks = useMemo(() => {
+    const studentName =
+      user?.name ||
+      user?.fullName ||
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+
+    return feedbacks
+      .filter((feedback) => {
+        if (feedback.anonymous) return false;
+
+        return (
+          feedback.submittedBy === studentName ||
+          feedback.studentId === user?.studentId ||
+          feedback.email === user?.email
+        );
+      })
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.date || a.createdAt || 0
+        ).getTime();
+
+        const dateB = new Date(
+          b.date || b.createdAt || 0
+        ).getTime();
+
+        return dateB - dateA;
+      });
+  }, [feedbacks, user]);
+
+  const totalComplaints = studentComplaints.length;
+
+  const pendingComplaints = studentComplaints.filter(
+    (complaint) =>
+      complaint.status === "Pending"
+  ).length;
+
+  const inProgressComplaints = studentComplaints.filter(
+    (complaint) =>
+      complaint.status === "In Progress" ||
+      complaint.status === "In-Progress"
+  ).length;
+
+  const resolvedComplaints = studentComplaints.filter(
+    (complaint) =>
+      complaint.status === "Resolved"
+  ).length;
+
+  const handleLogout = () => {
+    localStorage.removeItem("cfms_user");
+
+    toast.success("Logged out successfully");
+
+    navigate("/login");
   };
-
-  // =====================================================
-  // STATISTICS
-  // =====================================================
-
-  const pendingCount = complaints.filter(
-    (complaint) =>
-      String(complaint.status || "").toLowerCase() === "pending"
-  ).length;
-
-  const progressCount = complaints.filter(
-    (complaint) =>
-      String(complaint.status || "").toLowerCase() === "in progress"
-  ).length;
-
-  const resolvedCount = complaints.filter(
-    (complaint) =>
-      String(complaint.status || "").toLowerCase() === "resolved"
-  ).length;
-
-  // =====================================================
-  // SORT COMPLAINTS
-  // =====================================================
-
-  const sortedComplaints = useMemo(() => {
-    return [...complaints].sort((a, b) => {
-      const dateA = new Date(a.date || 0).getTime();
-      const dateB = new Date(b.date || 0).getTime();
-
-      return dateB - dateA;
-    });
-  }, [complaints]);
-
-  // =====================================================
-  // SORT FEEDBACKS
-  // =====================================================
-
-  const sortedFeedbacks = useMemo(() => {
-    return [...feedbacks].sort((a, b) => {
-      const dateA = new Date(a.date || 0).getTime();
-      const dateB = new Date(b.date || 0).getTime();
-
-      return dateB - dateA;
-    });
-  }, [feedbacks]);
-
-  // =====================================================
-  // COMPLAINT FORM
-  // =====================================================
 
   const handleComplaintChange = (event) => {
     const { name, value } = event.target;
@@ -230,25 +183,15 @@ function StudentDashboard() {
     }));
   };
 
-  // =====================================================
-  // SUBMIT COMPLAINT
-  // =====================================================
-
-  const handleSubmitComplaint = (event) => {
+  const handleComplaintSubmit = (event) => {
     event.preventDefault();
 
-    const cleanTitle = newComplaint.title.trim();
-    const cleanDescription =
-      newComplaint.description.trim();
-
-    if (!cleanTitle) {
-      toast.error("Please enter a complaint title.");
-      return;
-    }
-
-    if (!cleanDescription) {
+    if (
+      !newComplaint.title.trim() ||
+      !newComplaint.description.trim()
+    ) {
       toast.error(
-        "Please enter a complaint description."
+        "Please enter complaint title and description."
       );
       return;
     }
@@ -257,470 +200,427 @@ function StudentDashboard() {
       1000 + Math.random() * 9000
     )}`;
 
-    const createdComplaint = {
+    const studentName =
+      user?.name ||
+      user?.fullName ||
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+      "Student";
+
+    const complaint = {
       id: complaintId,
-      title: cleanTitle,
-      subject: cleanTitle,
+      title: newComplaint.title.trim(),
+      subject: newComplaint.title.trim(),
       category: newComplaint.category,
       priority: newComplaint.priority,
-      description: cleanDescription,
+      description: newComplaint.description.trim(),
       status: "Pending",
       anonymous: false,
-      submittedBy: user?.name || "Student",
+      submittedBy: studentName,
+      studentId: user?.studentId || "",
+      email: user?.email || "",
       date: new Date().toISOString().split("T")[0],
+      createdAt: new Date().toISOString(),
     };
 
-    try {
-      saveComplaint(createdComplaint);
+    saveComplaint(complaint);
 
-      setComplaints((previous) => [
-        createdComplaint,
-        ...previous,
-      ]);
+    setComplaints(getStoredComplaints());
 
-      const currentCategories = getStoredCategories();
+    setNewComplaint({
+      title: "",
+      category: "Infrastructure",
+      priority: "Medium",
+      description: "",
+    });
 
-      setNewComplaint({
-        title: "",
-        category: currentCategories[0] || "Other",
-        priority: "Medium",
-        description: "",
-      });
+    setShowComplaintModal(false);
 
-      setShowModal(false);
-
-      toast.success(
-        `Complaint submitted successfully. Reference ID: ${complaintId}`
-      );
-    } catch (error) {
-      console.error(
-        "Unable to save complaint:",
-        error
-      );
-
-      toast.error(
-        "Unable to submit complaint. Please try again."
-      );
-    }
+    toast.success(
+      `Complaint submitted successfully. ID: ${complaintId}`
+    );
   };
 
-  // =====================================================
-  // OPEN FEEDBACK MODAL
-  // =====================================================
-
   const openFeedbackModal = () => {
-    const storedCategories = getStoredCategories();
+    if (!studentComplaints.length) {
+      toast.error(
+        "You need to submit a complaint first."
+      );
+      return;
+    }
 
-    const currentCategories =
-      storedCategories.length > 0
-        ? storedCategories
-        : ["Other"];
+    const resolvedComplaint = studentComplaints.find(
+      (complaint) =>
+        complaint.status === "Resolved" &&
+        !hasSubmittedFeedback(complaint.id)
+    );
 
-    setCategories(currentCategories);
+    if (!resolvedComplaint) {
+      toast.error(
+        "Feedback can only be submitted for a resolved complaint."
+      );
+      return;
+    }
 
-    setFeedbackComplaintId("");
-    setFeedbackRating(5);
-    setFeedbackCategory(currentCategories[0]);
+    setFeedbackComplaintId(resolvedComplaint.id);
+
+    setFeedbackCategory(
+      resolvedComplaint.category || "General"
+    );
+
+    setFeedbackRating(0);
     setFeedbackComment("");
-
-    setFeedbackVerified(false);
-    setFeedbackVerificationMessage("");
-    setFeedbackVerificationType("");
 
     setShowFeedbackModal(true);
   };
 
-  // =====================================================
-  // OPEN COMPLAINT MODAL
-  // =====================================================
+  const handleFeedbackSubmit = (event) => {
+    event.preventDefault();
 
-  const openComplaintModal = () => {
-    refreshCategories();
-    setShowModal(true);
-  };
-
-  // =====================================================
-  // CLOSE FEEDBACK MODAL
-  // =====================================================
-
-  const closeFeedbackModal = () => {
-    setShowFeedbackModal(false);
-
-    setFeedbackComplaintId("");
-    setFeedbackRating(5);
-
-    const storedCategories = getStoredCategories();
-
-    setFeedbackCategory(
-      storedCategories[0] || "Other"
-    );
-
-    setFeedbackComment("");
-
-    setFeedbackVerified(false);
-    setFeedbackVerificationMessage("");
-    setFeedbackVerificationType("");
-  };
-
-  // =====================================================
-  // VERIFY FEEDBACK COMPLAINT
-  // =====================================================
-
-  const handleVerifyFeedbackComplaint = () => {
-    const cleanId =
-      feedbackComplaintId.trim();
-
-    if (!cleanId) {
-      setFeedbackVerified(false);
-      setFeedbackVerificationType("error");
-
-      setFeedbackVerificationMessage(
-        "Please enter your Complaint Reference ID."
-      );
-
+    if (!feedbackComplaintId) {
+      toast.error("Please select a complaint.");
       return;
     }
 
-    const found = complaints.find(
-      (complaint) =>
-        complaint.id &&
-        complaint.id.toLowerCase() ===
-          cleanId.toLowerCase()
+    const complaint = studentComplaints.find(
+      (item) =>
+        item.id === feedbackComplaintId
     );
 
-    if (!found) {
-      setFeedbackVerified(false);
-      setFeedbackVerificationType("error");
+    if (!complaint) {
+      toast.error("Complaint not found.");
+      return;
+    }
 
-      setFeedbackVerificationMessage(
-        "Complaint not found. Please check your Reference ID."
+    if (complaint.status !== "Resolved") {
+      toast.error(
+        "Feedback can only be submitted after the complaint is resolved."
       );
-
       return;
     }
 
     if (
-      String(found.status || "").toLowerCase() !==
-      "resolved"
+      hasSubmittedFeedback(feedbackComplaintId)
     ) {
-      setFeedbackVerified(false);
-      setFeedbackVerificationType("warning");
-
-      setFeedbackVerificationMessage(
-        `Complaint found, but its current status is "${found.status}". Feedback is available only after the complaint is resolved.`
-      );
-
-      return;
-    }
-
-    if (hasSubmittedFeedback(found.id)) {
-      setFeedbackVerified(false);
-      setFeedbackVerificationType("warning");
-
-      setFeedbackVerificationMessage(
+      toast.error(
         "Feedback has already been submitted for this complaint."
       );
-
       return;
     }
 
-    setFeedbackVerified(true);
-    setFeedbackVerificationType("success");
-
-    setFeedbackVerificationMessage(
-      "Complaint verified. You can now submit your feedback."
-    );
-  };
-
-  // =====================================================
-  // FEEDBACK ID CHANGE
-  // =====================================================
-
-  const handleFeedbackComplaintIdChange = (event) => {
-    setFeedbackComplaintId(event.target.value);
-
-    setFeedbackVerified(false);
-    setFeedbackVerificationMessage("");
-    setFeedbackVerificationType("");
-  };
-
-  // =====================================================
-  // SUBMIT STUDENT FEEDBACK
-  // =====================================================
-
-  const handleSubmitStudentFeedback = (event) => {
-    event.preventDefault();
-
-    const cleanComplaintId =
-      feedbackComplaintId.trim().toUpperCase();
-
-    const cleanComment =
-      feedbackComment.trim();
-
-    if (!cleanComplaintId) {
-      toast.error(
-        "Please enter your Complaint Reference ID."
-      );
+    if (!feedbackComment.trim()) {
+      toast.error("Please enter your feedback.");
       return;
     }
 
-    if (!feedbackVerified) {
-      toast.error(
-        "Please verify your Complaint Reference ID first."
-      );
+    if (!feedbackRating) {
+      toast.error("Please select a rating.");
       return;
     }
 
-    if (!cleanComment) {
-      toast.error(
-        "Please enter your feedback comments."
-      );
-      return;
-    }
+    const studentName =
+      user?.name ||
+      user?.fullName ||
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+      "Student";
 
-    const feedbackObj = {
-      complaintId: cleanComplaintId,
-      rating: feedbackRating,
+    const feedback = {
+      id: `FDB-${Math.floor(
+        1000 + Math.random() * 9000
+      )}`,
+      complaintId: feedbackComplaintId,
       category: feedbackCategory,
-      comment: cleanComment,
-
+      rating: feedbackRating,
+      comment: feedbackComment.trim(),
       anonymous: false,
-
-      submittedBy:
-        user?.name ||
-        user?.fullName ||
-        "Student",
-
+      submittedBy: studentName,
       studentId: user?.studentId || "",
       email: user?.email || "",
-
-      date: new Date()
-        .toISOString()
-        .split("T")[0],
+      date: new Date().toISOString().split("T")[0],
+      createdAt: new Date().toISOString(),
     };
 
-    try {
-      saveFeedback(feedbackObj);
+    saveFeedback(feedback);
 
-      setFeedbacks((previous) => [
-        feedbackObj,
-        ...previous,
-      ]);
+    setFeedbacks(getStoredFeedback());
 
-      closeFeedbackModal();
+    setShowFeedbackModal(false);
 
-      toast.success(
-        "Your feedback has been submitted successfully."
-      );
-    } catch (error) {
-      console.error(
-        "Unable to save feedback:",
-        error
-      );
+    setFeedbackComplaintId("");
+    setFeedbackRating(0);
+    setFeedbackCategory("General");
+    setFeedbackComment("");
 
-      toast.error(
-        "Unable to submit feedback. Please try again."
-      );
-    }
-  };
-
-  // =====================================================
-  // LOGOUT
-  // =====================================================
-
-  const handleLogout = () => {
-    localStorage.removeItem("cfms_user");
-    localStorage.removeItem("userRole");
-
-    navigate("/login");
-  };
-
-  // =====================================================
-  // HELPERS
-  // =====================================================
-
-  const getComplaintTitle = (complaint) => {
-    return (
-      complaint.title ||
-      complaint.subject ||
-      "Untitled Complaint"
-    );
+    toast.success("Feedback submitted successfully.");
   };
 
   const getStatusClass = (status) => {
-    const cleanStatus = String(status || "")
-      .toLowerCase()
-      .replace(/\s+/g, "-");
+    switch (status) {
+      case "Resolved":
+        return "status-badge resolved";
 
-    return `status-${cleanStatus}`;
+      case "In Progress":
+      case "In-Progress":
+        return "status-badge progress";
+
+      case "Pending":
+      default:
+        return "status-badge pending";
+    }
   };
 
   const getPriorityClass = (priority) => {
-    const cleanPriority = String(priority || "")
-      .toLowerCase()
-      .replace(/\s+/g, "-");
+    switch (priority) {
+      case "High":
+        return "priority-badge high";
 
-    return `priority-${cleanPriority}`;
-  };
+      case "Low":
+        return "priority-badge low";
 
-  const formatDate = (date) => {
-    if (!date) return "—";
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return date;
+      case "Medium":
+      default:
+        return "priority-badge medium";
     }
-
-    return parsedDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
-
-  const displayName =
-    user?.name ||
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-    "Student";
 
   return (
     <>
       <Navbar />
 
-      <div className="dashboard-layout">
+      <div className="student-dashboard-shell">
 
-        {/* =================================================
-            SIDEBAR
-        ================================================= */}
+        {/* =========================================
+            LEFT INDEX
+        ========================================= */}
 
         <aside className="sidebar">
 
-          <div className="sidebar-brand">
-            <div className="logo-box">C</div>
+          <div className="sidebar-top">
 
-            <span>CampusVoice</span>
+            <div className="sidebar-brand">
+              <div className="sidebar-brand-mark">
+                C
+              </div>
+
+              <strong>CampusVoice</strong>
+
+              <span>Student Portal</span>
+            </div>
+
+            <div className="sidebar-status">
+              <span className="sidebar-status-dot"></span>
+
+              <div>
+                <strong>Student Status</strong>
+                <span>Active</span>
+              </div>
+            </div>
+
+            <nav className="sidebar-menu">
+
+              <Link
+                to="/student-dashboard"
+                className="sidebar-menu-item active"
+              >
+                Dashboard
+              </Link>
+
+              <Link
+                to="/student-dashboard"
+                className="sidebar-menu-item"
+              >
+                My Complaints
+              </Link>
+
+              <Link
+                to="/student-dashboard"
+                className="sidebar-menu-item"
+              >
+                My Feedbacks
+              </Link>
+
+              <Link
+                to="/student-dashboard"
+                className="sidebar-menu-item"
+              >
+                Profile
+              </Link>
+
+            </nav>
+
           </div>
 
-          <nav className="sidebar-menu">
+          <div className="sidebar-bottom">
 
-            <a href="#overview" className="active">
-              Overview
-            </a>
-
-            <a href="#my-complaints">
-              My Complaints
-            </a>
-
-            <a href="#my-feedbacks">
-              My Feedbacks
-            </a>
-
-            <Link to="/profile">
-              Profile
-            </Link>
-
-          </nav>
-        </aside>
-
-        {/* =================================================
-            MAIN CONTENT
-        ================================================= */}
-
-        <main className="dashboard-content">
-
-          {/* =================================================
-              HEADER
-          ================================================= */}
-
-          <header
-            className="dashboard-header"
-            id="overview"
-          >
-            <div>
-
-              <span className="dashboard-eyebrow">
-                CAMPUSVOICE STUDENT PORTAL
-              </span>
-
-              <h1>Student Dashboard</h1>
-
-              <p>
-                Welcome back, {displayName}. Track your
-                complaints, feedback, and campus concerns.
-              </p>
-
+            <div className="sidebar-help">
+              <strong>Need Help?</strong>
+              Contact the administration for assistance with your complaints.
             </div>
 
             <button
               type="button"
-              className="btn-primary-large"
-              onClick={openComplaintModal}
+              className="sidebar-logout"
+              onClick={handleLogout}
             >
-              + Submit New Complaint
+              Logout
             </button>
-
-          </header>
-
-          {/* =================================================
-              STATISTICS
-          ================================================= */}
-
-          <div className="dashboard-stats">
-
-            <div className="stat-card">
-              <h3>Total Complaints</h3>
-              <p>{complaints.length}</p>
-              <small>
-                All submitted complaints
-              </small>
-            </div>
-
-            <div className="stat-card">
-              <h3>Pending</h3>
-              <p>{pendingCount}</p>
-              <small>
-                Awaiting review
-              </small>
-            </div>
-
-            <div className="stat-card">
-              <h3>In Progress</h3>
-              <p>{progressCount}</p>
-              <small>
-                Currently being handled
-              </small>
-            </div>
-
-            <div className="stat-card">
-              <h3>Resolved</h3>
-              <p>{resolvedCount}</p>
-              <small>
-                Successfully resolved
-              </small>
-            </div>
 
           </div>
 
-          {/* =================================================
-              COMPLAINTS + FEEDBACKS
-          ================================================= */}
+        </aside>
 
-          <div className="dashboard-split-row">
 
-            {/* =================================================
-                MY COMPLAINTS
-            ================================================= */}
+        {/* =========================================
+            RIGHT SIDE: DASHBOARD + FOOTER
+        ========================================= */}
 
-            <section
-              className="dashboard-section split-col"
-              id="my-complaints"
-            >
+        <div className="dashboard-main-area">
 
-              <div className="section-heading-row">
+          <main className="dashboard-content">
+
+            {/* HEADER */}
+
+            <section className="dashboard-header">
+
+              <div>
+                <span className="section-eyebrow">
+                  STUDENT DASHBOARD
+                </span>
+
+                <h1>
+                  Welcome, {displayName}
+                </h1>
+
+                <p>
+                  Manage your complaints, feedback and
+                  student account from one place.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() =>
+                  setShowComplaintModal(true)
+                }
+              >
+                Lodge Complaint
+              </button>
+
+            </section>
+
+
+            {/* STATISTICS */}
+
+            <section className="dashboard-stats">
+
+              <div className="stat-card">
+                <div className="stat-card-top">
+                  <span className="stat-label">
+                    Total Complaints
+                  </span>
+                </div>
+
+                <strong className="stat-value">
+                  {totalComplaints}
+                </strong>
+
+                <span className="stat-description">
+                  Complaints submitted by you
+                </span>
+              </div>
+
+
+              <div className="stat-card">
+                <div className="stat-card-top">
+                  <span className="stat-label">
+                    Pending
+                  </span>
+                </div>
+
+                <strong className="stat-value">
+                  {pendingComplaints}
+                </strong>
+
+                <span className="stat-description">
+                  Awaiting action
+                </span>
+              </div>
+
+
+              <div className="stat-card">
+                <div className="stat-card-top">
+                  <span className="stat-label">
+                    In Progress
+                  </span>
+                </div>
+
+                <strong className="stat-value">
+                  {inProgressComplaints}
+                </strong>
+
+                <span className="stat-description">
+                  Currently being handled
+                </span>
+              </div>
+
+
+              <div className="stat-card">
+                <div className="stat-card-top">
+                  <span className="stat-label">
+                    Resolved
+                  </span>
+                </div>
+
+                <strong className="stat-value">
+                  {resolvedComplaints}
+                </strong>
+
+                <span className="stat-description">
+                  Successfully resolved
+                </span>
+              </div>
+
+            </section>
+
+
+            {/* STUDENT STATUS */}
+
+            <section className="student-status-card">
+
+              <div className="student-status-main">
+
+                <div className="student-avatar">
+                  {studentInitial}
+                </div>
 
                 <div>
+                  <span className="section-eyebrow">
+                    STUDENT STATUS
+                  </span>
 
+                  <h2>{displayName}</h2>
+
+                  <p>
+                    Active student account on CampusVoice.
+                  </p>
+                </div>
+
+              </div>
+
+              <span className="student-online-status">
+                Active
+              </span>
+
+            </section>
+
+
+            {/* MY COMPLAINTS */}
+
+            <section className="dashboard-section">
+
+              <div className="section-heading">
+
+                <div>
                   <span className="section-eyebrow">
                     COMPLAINT MANAGEMENT
                   </span>
@@ -728,28 +628,27 @@ function StudentDashboard() {
                   <h2>My Complaints</h2>
 
                   <p>
-                    View and track the complaints you
-                    have submitted.
+                    View and track the complaints submitted
+                    from your student account.
                   </p>
-
                 </div>
 
-                <Link
-                  to="/track-complaint"
-                  className="section-link"
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() =>
+                    setShowComplaintModal(true)
+                  }
                 >
-                  Track Complaint
-                </Link>
+                  New Complaint
+                </button>
 
               </div>
 
-              {sortedComplaints.length === 0 ? (
+
+              {studentComplaints.length === 0 ? (
+
                 <div className="empty-state">
-
-                  <div className="empty-state-icon">
-                    C
-                  </div>
-
                   <h3>No complaints yet</h3>
 
                   <p>
@@ -758,40 +657,42 @@ function StudentDashboard() {
 
                   <button
                     type="button"
-                    className="empty-state-btn"
-                    onClick={openComplaintModal}
+                    className="primary-button"
+                    onClick={() =>
+                      setShowComplaintModal(true)
+                    }
                   >
-                    Submit Your First Complaint
+                    Lodge Your First Complaint
                   </button>
-
                 </div>
+
               ) : (
 
-                <div className="table-container">
+                <div className="table-wrapper">
 
-                  <table className="custom-table">
+                  <table className="complaints-table">
 
                     <thead>
-
                       <tr>
-                        <th>Complaint ID</th>
+                        <th>ID</th>
                         <th>Complaint</th>
                         <th>Category</th>
                         <th>Date</th>
                         <th>Priority</th>
                         <th>Status</th>
+                        <th>Action</th>
                       </tr>
-
                     </thead>
 
                     <tbody>
 
-                      {sortedComplaints.map(
+                      {studentComplaints.map(
                         (complaint) => (
+
                           <tr key={complaint.id}>
 
                             <td>
-                              <strong>
+                              <strong className="complaint-id">
                                 {complaint.id}
                               </strong>
                             </td>
@@ -800,22 +701,22 @@ function StudentDashboard() {
 
                               <div className="complaint-title-cell">
 
-                                <span>
-                                  {getComplaintTitle(
-                                    complaint
-                                  )}
-                                </span>
+                                <strong>
+                                  {complaint.title ||
+                                    complaint.subject ||
+                                    "Untitled Complaint"}
+                                </strong>
 
                                 {complaint.description && (
-                                  <small>
-                                    {complaint.description
-                                      .length > 65
+                                  <span>
+                                    {complaint.description.length >
+                                    70
                                       ? `${complaint.description.slice(
                                           0,
-                                          65
+                                          70
                                         )}...`
                                       : complaint.description}
-                                  </small>
+                                  </span>
                                 )}
 
                               </div>
@@ -823,47 +724,47 @@ function StudentDashboard() {
                             </td>
 
                             <td>
-
-                              <span className="category-badge">
-                                {complaint.category ||
-                                  "Other"}
-                              </span>
-
+                              {complaint.category ||
+                                "General"}
                             </td>
 
                             <td>
-                              {formatDate(
-                                complaint.date
-                              )}
+                              {complaint.date || "—"}
                             </td>
 
                             <td>
-
                               <span
-                                className={`badge ${getPriorityClass(
+                                className={getPriorityClass(
                                   complaint.priority
-                                )}`}
+                                )}
                               >
                                 {complaint.priority ||
                                   "Medium"}
                               </span>
-
                             </td>
 
                             <td>
-
                               <span
-                                className={`badge ${getStatusClass(
+                                className={getStatusClass(
                                   complaint.status
-                                )}`}
+                                )}
                               >
                                 {complaint.status ||
                                   "Pending"}
                               </span>
+                            </td>
 
+                            <td>
+                              <Link
+                                to={`/track-complaint?id=${complaint.id}`}
+                                className="track-link"
+                              >
+                                Track
+                              </Link>
                             </td>
 
                           </tr>
+
                         )
                       )}
 
@@ -872,39 +773,34 @@ function StudentDashboard() {
                   </table>
 
                 </div>
+
               )}
 
             </section>
 
-            {/* =================================================
-                MY FEEDBACKS
-            ================================================= */}
 
-            <section
-              className="dashboard-section split-col"
-              id="my-feedbacks"
-            >
+            {/* MY FEEDBACKS */}
 
-              <div className="section-heading-row">
+            <section className="dashboard-section">
+
+              <div className="section-heading">
 
                 <div>
-
                   <span className="section-eyebrow">
-                    FEEDBACK MANAGEMENT
+                    FEEDBACK
                   </span>
 
                   <h2>My Feedbacks</h2>
 
                   <p>
-                    Review the feedback you have submitted
-                    through CampusVoice.
+                    Review feedback submitted for your
+                    resolved complaints.
                   </p>
-
                 </div>
 
                 <button
                   type="button"
-                  className="section-link feedback-link-button"
+                  className="secondary-button"
                   onClick={openFeedbackModal}
                 >
                   Give Feedback
@@ -912,75 +808,49 @@ function StudentDashboard() {
 
               </div>
 
-              {sortedFeedbacks.length === 0 ? (
+
+              {studentFeedbacks.length === 0 ? (
+
                 <div className="empty-state">
-
-                  <div className="empty-state-icon">
-                    F
-                  </div>
-
                   <h3>No feedback submitted</h3>
 
                   <p>
-                    Your submitted feedback will appear
-                    here.
+                    Feedback becomes available after a
+                    complaint is resolved.
                   </p>
-
-                  <button
-                    type="button"
-                    className="empty-state-btn"
-                    onClick={openFeedbackModal}
-                  >
-                    Give Feedback
-                  </button>
-
                 </div>
+
               ) : (
 
-                <div className="feedback-list">
+                <div className="feedback-grid">
 
-                  {sortedFeedbacks.map(
+                  {studentFeedbacks.map(
                     (feedback, index) => (
 
-                      <article
+                      <div
                         className="feedback-card"
                         key={
                           feedback.id ||
-                          `${feedback.complaintId}-${feedback.date}-${index}`
+                          `${feedback.complaintId}-${index}`
                         }
                       >
 
                         <div className="feedback-card-header">
 
                           <div>
-
                             <span className="feedback-complaint-id">
-                              {feedback.complaintId ||
-                                "Feedback"}
+                              {feedback.complaintId}
                             </span>
 
                             <h3>
                               {feedback.category ||
-                                "Other"}
+                                "General"}
                             </h3>
-
                           </div>
 
-                          <span className="anonymous-badge">
-                            Submitted
+                          <span className="feedback-rating">
+                            {feedback.rating}/5
                           </span>
-
-                        </div>
-
-                        <div className="feedback-rating-row">
-
-                          <span className="feedback-rating-label">
-                            Rating
-                          </span>
-
-                          <strong className="feedback-rating">
-                            {feedback.rating || 0}/5
-                          </strong>
 
                         </div>
 
@@ -990,228 +860,298 @@ function StudentDashboard() {
                         </p>
 
                         <div className="feedback-card-footer">
-
                           <span>
-                            Submitted on{" "}
-                            {formatDate(feedback.date)}
+                            {feedback.date || "—"}
                           </span>
 
                           <span>
-                            {feedback.id ||
-                              "Feedback"}
+                            Anonymous:{" "}
+                            {feedback.anonymous
+                              ? "Yes"
+                              : "No"}
                           </span>
-
                         </div>
 
-                      </article>
+                      </div>
 
                     )
                   )}
 
                 </div>
+
               )}
 
             </section>
 
+
+            {/* PROFILE PREVIEW */}
+
+            <section className="dashboard-section">
+
+              <div className="section-heading">
+
+                <div>
+                  <span className="section-eyebrow">
+                    ACCOUNT
+                  </span>
+
+                  <h2>Profile Preview</h2>
+
+                  <p>
+                    Information associated with your
+                    CampusVoice student account.
+                  </p>
+                </div>
+
+              </div>
+
+
+              <div className="profile-preview">
+
+                <div className="profile-preview-avatar">
+                  {studentInitial}
+                </div>
+
+                <div className="profile-preview-details">
+
+                  <div>
+                    <span>Full Name</span>
+                    <strong>{displayName}</strong>
+                  </div>
+
+                  <div>
+                    <span>Student ID</span>
+                    <strong>
+                      {user?.studentId ||
+                        "Not available"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Email</span>
+                    <strong>
+                      {user?.email ||
+                        "Not available"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Role</span>
+                    <strong>Student</strong>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </section>
+
+
+            {/* QUICK ACTIONS */}
+
+            <section className="dashboard-section">
+
+              <div className="section-heading">
+
+                <div>
+                  <span className="section-eyebrow">
+                    QUICK ACCESS
+                  </span>
+
+                  <h2>Quick Actions</h2>
+                </div>
+
+              </div>
+
+
+              <div className="quick-actions">
+
+                <button
+                  type="button"
+                  className="quick-action-card"
+                  onClick={() =>
+                    setShowComplaintModal(true)
+                  }
+                >
+                  <strong>
+                    Lodge Complaint
+                  </strong>
+
+                  <span>
+                    Submit a new complaint
+                  </span>
+                </button>
+
+
+                <Link
+                  to="/track-complaint"
+                  className="quick-action-card"
+                >
+                  <strong>
+                    Track Complaint
+                  </strong>
+
+                  <span>
+                    Check complaint status
+                  </span>
+                </Link>
+
+
+                <button
+                  type="button"
+                  className="quick-action-card"
+                  onClick={openFeedbackModal}
+                >
+                  <strong>
+                    Give Feedback
+                  </strong>
+
+                  <span>
+                    Share your experience
+                  </span>
+                </button>
+
+
+                <Link
+                  to="/"
+                  className="quick-action-card"
+                >
+                  <strong>
+                    CampusVoice Home
+                  </strong>
+
+                  <span>
+                    Return to homepage
+                  </span>
+                </Link>
+
+              </div>
+
+            </section>
+
+          </main>
+
+
+          {/* FOOTER ONLY BELONGS TO RIGHT CONTENT AREA */}
+
+          <div className="dashboard-footer-wrapper">
+            <Footer />
           </div>
 
-          {/* =================================================
-              PROFILE PREVIEW
-          ================================================= */}
+        </div>
 
-          <section className="profile-preview-section">
-
-            <div className="profile-preview-content">
-
-              <span className="section-eyebrow">
-                STUDENT ACCOUNT
-              </span>
-
-              <h2>Your Profile</h2>
-
-              <p>
-                View your CampusVoice student profile.
-              </p>
-
-            </div>
-
-            <Link
-              to="/profile"
-              className="profile-preview-btn"
-            >
-              View My Profile
-            </Link>
-
-          </section>
-
-          {/* =================================================
-              CAMPUS SERVICES
-          ================================================= */}
-
-          <section className="manage-section">
-
-            <div className="manage-content">
-
-              <span className="section-eyebrow">
-                CAMPUSVOICE SERVICES
-              </span>
-
-              <h2>
-                Manage Your Campus Concerns
-              </h2>
-
-            </div>
-
-            <div className="manage-actions">
-
-              <button
-                type="button"
-                className="manage-action primary"
-                onClick={openComplaintModal}
-              >
-                Submit Complaint
-              </button>
-
-              <button
-                type="button"
-                className="manage-action"
-                onClick={openFeedbackModal}
-              >
-                Give Feedback
-              </button>
-
-              <Link
-                to="/track-complaint"
-                className="manage-action"
-              >
-                Track Complaint
-              </Link>
-
-            </div>
-
-          </section>
-
-          {/* =================================================
-              FOOTER
-          ================================================= */}
-
-          <Footer />
-
-        </main>
       </div>
 
-      {/* =====================================================
-          SUBMIT COMPLAINT MODAL
-      ===================================================== */}
 
-      {showModal && (
+      {/* =========================================
+          COMPLAINT MODAL
+      ========================================= */}
+
+      {showComplaintModal && (
 
         <div
           className="modal-overlay"
-          onMouseDown={(event) => {
-
-            if (
-              event.target === event.currentTarget
-            ) {
-              setShowModal(false);
-            }
-
-          }}
+          onClick={() =>
+            setShowComplaintModal(false)
+          }
         >
 
-          <div className="modal-body">
+          <div
+            className="dashboard-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
 
             <div className="modal-header">
 
               <div>
-
-                <span className="modal-eyebrow">
-                  CAMPUSVOICE
+                <span className="section-eyebrow">
+                  NEW SUBMISSION
                 </span>
 
-                <h2>
-                  Submit New Complaint
-                </h2>
-
-                <p>
-                  Provide the details of the issue you
-                  would like the institution to review.
-                </p>
-
+                <h2>Lodge Complaint</h2>
               </div>
 
               <button
                 type="button"
                 className="modal-close"
-                onClick={() => setShowModal(false)}
-                aria-label="Close"
+                onClick={() =>
+                  setShowComplaintModal(false)
+                }
               >
                 ×
               </button>
 
             </div>
 
-            <form onSubmit={handleSubmitComplaint}>
+
+            <form
+              className="dashboard-form"
+              onSubmit={handleComplaintSubmit}
+            >
 
               <div className="form-group">
 
-                <label htmlFor="complaint-title">
+                <label htmlFor="title">
                   Complaint Title
                 </label>
 
                 <input
-                  id="complaint-title"
+                  id="title"
                   name="title"
                   type="text"
-                  placeholder="Enter complaint title"
                   value={newComplaint.title}
                   onChange={handleComplaintChange}
-                  required
+                  placeholder="Enter complaint title"
                 />
 
               </div>
+
 
               <div className="form-row">
 
                 <div className="form-group">
 
-                  <label htmlFor="complaint-category">
+                  <label htmlFor="category">
                     Category
                   </label>
 
                   <select
-                    id="complaint-category"
+                    id="category"
                     name="category"
                     value={newComplaint.category}
                     onChange={handleComplaintChange}
                   >
 
-                    {categories.map((categoryName) => (
-                      <option
-                        key={categoryName}
-                        value={categoryName}
-                      >
-                        {categoryName}
-                      </option>
-                    ))}
+                    {availableCategories.map(
+                      (category) => (
+                        <option
+                          key={category}
+                          value={category}
+                        >
+                          {category}
+                        </option>
+                      )
+                    )}
 
                   </select>
 
                 </div>
 
+
                 <div className="form-group">
 
-                  <label htmlFor="complaint-priority">
+                  <label htmlFor="priority">
                     Priority
                   </label>
 
                   <select
-                    id="complaint-priority"
+                    id="priority"
                     name="priority"
                     value={newComplaint.priority}
                     onChange={handleComplaintChange}
                   >
-
                     <option value="Low">
                       Low
                     </option>
@@ -1223,44 +1163,46 @@ function StudentDashboard() {
                     <option value="High">
                       High
                     </option>
-
                   </select>
 
                 </div>
 
               </div>
 
+
               <div className="form-group">
 
-                <label htmlFor="complaint-description">
+                <label htmlFor="description">
                   Description
                 </label>
 
                 <textarea
-                  id="complaint-description"
+                  id="description"
                   name="description"
-                  rows="5"
-                  placeholder="Describe the issue in detail..."
+                  rows="6"
                   value={newComplaint.description}
                   onChange={handleComplaintChange}
-                  required
+                  placeholder="Describe your complaint in detail..."
                 />
 
               </div>
+
 
               <div className="modal-actions">
 
                 <button
                   type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowModal(false)}
+                  className="secondary-button"
+                  onClick={() =>
+                    setShowComplaintModal(false)
+                  }
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="primary-button"
                 >
                   Submit Complaint
                 </button>
@@ -1275,155 +1217,105 @@ function StudentDashboard() {
 
       )}
 
-      {/* =====================================================
-          STUDENT FEEDBACK MODAL
-      ===================================================== */}
+
+      {/* =========================================
+          FEEDBACK MODAL
+      ========================================= */}
 
       {showFeedbackModal && (
 
         <div
           className="modal-overlay"
-          onMouseDown={(event) => {
-
-            if (
-              event.target === event.currentTarget
-            ) {
-              closeFeedbackModal();
-            }
-
-          }}
+          onClick={() =>
+            setShowFeedbackModal(false)
+          }
         >
 
-          <div className="modal-body feedback-modal-body">
+          <div
+            className="dashboard-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
 
             <div className="modal-header">
 
               <div>
-
-                <span className="modal-eyebrow">
-                  CAMPUSVOICE
+                <span className="section-eyebrow">
+                  FEEDBACK
                 </span>
 
-                <h2>
-                  Submit Feedback
-                </h2>
-
-                <p>
-                  Share your experience after your
-                  complaint has been resolved.
-                </p>
-
+                <h2>Give Feedback</h2>
               </div>
 
               <button
                 type="button"
                 className="modal-close"
-                onClick={closeFeedbackModal}
-                aria-label="Close"
+                onClick={() =>
+                  setShowFeedbackModal(false)
+                }
               >
                 ×
               </button>
 
             </div>
 
+
             <form
-              onSubmit={handleSubmitStudentFeedback}
+              className="dashboard-form"
+              onSubmit={handleFeedbackSubmit}
             >
 
-              {/* COMPLAINT ID */}
-
               <div className="form-group">
 
-                <label htmlFor="student-feedback-id">
-                  Complaint Reference ID
+                <label htmlFor="feedbackComplaint">
+                  Resolved Complaint
                 </label>
 
-                <div className="feedback-verify-row">
-
-                  <input
-                    id="student-feedback-id"
-                    type="text"
-                    placeholder="Example: CMP-1234"
-                    value={feedbackComplaintId}
-                    onChange={
-                      handleFeedbackComplaintIdChange
-                    }
-                  />
-
-                  <button
-                    type="button"
-                    className="verify-feedback-btn"
-                    onClick={
-                      handleVerifyFeedbackComplaint
-                    }
-                  >
-                    Verify
-                  </button>
-
-                </div>
-
-                {feedbackVerificationMessage && (
-
-                  <div
-                    className={`feedback-verification-message ${feedbackVerificationType}`}
-                  >
-                    {feedbackVerificationMessage}
-                  </div>
-
-                )}
-
-              </div>
-
-              {/* RATING */}
-
-              <div className="form-group">
-
-                <label>
-                  Rating
-                </label>
-
-                <div className="student-rating-options">
-
-                  {[1, 2, 3, 4, 5].map(
-                    (number) => (
-
-                      <button
-                        type="button"
-                        key={number}
-                        className={
-                          number === feedbackRating
-                            ? "student-rating-btn active"
-                            : "student-rating-btn"
-                        }
-                        onClick={() =>
-                          setFeedbackRating(number)
-                        }
-                      >
-                        {number}
-                      </button>
-
+                <select
+                  id="feedbackComplaint"
+                  value={feedbackComplaintId}
+                  onChange={(event) =>
+                    setFeedbackComplaintId(
+                      event.target.value
                     )
-                  )}
+                  }
+                >
 
-                </div>
+                  {studentComplaints
+                    .filter(
+                      (complaint) =>
+                        complaint.status ===
+                          "Resolved" &&
+                        !hasSubmittedFeedback(
+                          complaint.id
+                        )
+                    )
+                    .map((complaint) => (
+                      <option
+                        key={complaint.id}
+                        value={complaint.id}
+                      >
+                        {complaint.id} -{" "}
+                        {complaint.title ||
+                          complaint.subject ||
+                          "Complaint"}
+                      </option>
+                    ))}
 
-                <small className="student-rating-label">
-                  Selected rating:{" "}
-                  {feedbackRating} out of 5
-                </small>
+                </select>
 
               </div>
 
-              {/* CATEGORY */}
 
               <div className="form-group">
 
-                <label htmlFor="student-feedback-category">
+                <label htmlFor="feedbackCategory">
                   Category
                 </label>
 
                 <select
-                  id="student-feedback-category"
+                  id="feedbackCategory"
                   value={feedbackCategory}
                   onChange={(event) =>
                     setFeedbackCategory(
@@ -1432,80 +1324,98 @@ function StudentDashboard() {
                   }
                 >
 
-                  {categories.map((categoryName) => (
-                    <option
-                      key={categoryName}
-                      value={categoryName}
-                    >
-                      {categoryName}
-                    </option>
-                  ))}
+                  <option value="General">
+                    General
+                  </option>
+
+                  {availableCategories.map(
+                    (category) => (
+                      <option
+                        key={category}
+                        value={category}
+                      >
+                        {category}
+                      </option>
+                    )
+                  )}
 
                 </select>
 
               </div>
 
-              {/* COMMENTS */}
 
               <div className="form-group">
 
-                <label htmlFor="student-feedback-comment">
-                  Comments
+                <label>
+                  Rating
+                </label>
+
+                <div className="rating-selector">
+
+                  {[1, 2, 3, 4, 5].map(
+                    (rating) => (
+
+                      <button
+                        type="button"
+                        key={rating}
+                        className={
+                          feedbackRating === rating
+                            ? "rating-button selected"
+                            : "rating-button"
+                        }
+                        onClick={() =>
+                          setFeedbackRating(
+                            rating
+                          )
+                        }
+                      >
+                        {rating}
+                      </button>
+
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div className="form-group">
+
+                <label htmlFor="feedbackComment">
+                  Feedback
                 </label>
 
                 <textarea
-                  id="student-feedback-comment"
-                  rows="5"
-                  placeholder="Describe your complaint resolution experience..."
+                  id="feedbackComment"
+                  rows="6"
                   value={feedbackComment}
                   onChange={(event) =>
                     setFeedbackComment(
                       event.target.value
                     )
                   }
+                  placeholder="Share your experience..."
                 />
 
               </div>
 
-              {/* ACCOUNT NOTICE */}
-
-              <div className="student-feedback-note">
-
-                <strong>
-                  Student feedback
-                </strong>
-
-                <span>
-                  This feedback will be submitted through
-                  your CampusVoice student account.
-                </span>
-
-              </div>
-
-              {/* ACTIONS */}
 
               <div className="modal-actions">
 
                 <button
                   type="button"
-                  className="btn-secondary"
-                  onClick={closeFeedbackModal}
+                  className="secondary-button"
+                  onClick={() =>
+                    setShowFeedbackModal(false)
+                  }
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="btn-primary"
-                  disabled={!feedbackVerified}
-                  style={{
-                    opacity: feedbackVerified
-                      ? 1
-                      : 0.5,
-                    cursor: feedbackVerified
-                      ? "pointer"
-                      : "not-allowed",
-                  }}
+                  className="primary-button"
                 >
                   Submit Feedback
                 </button>
@@ -1520,166 +1430,8 @@ function StudentDashboard() {
 
       )}
 
-      {/* =====================================================
-          FEEDBACK MODAL STYLES
-      ===================================================== */}
-
-      <style>{`
-
-        .feedback-link-button {
-          background: none;
-          border: none;
-          padding: 0;
-          font: inherit;
-          cursor: pointer;
-        }
-
-        .feedback-modal-body {
-          max-width: 650px;
-        }
-
-        .feedback-verify-row {
-          display: flex;
-          gap: 10px;
-        }
-
-        .feedback-verify-row input {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .verify-feedback-btn {
-          padding: 11px 18px;
-          border: none;
-          border-radius: 8px;
-          background: #10b981;
-          color: #022c22;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .verify-feedback-btn:hover {
-          background: #34d399;
-        }
-
-        .feedback-verification-message {
-          margin-top: 7px;
-          padding: 10px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          line-height: 1.5;
-        }
-
-        .feedback-verification-message.success {
-          background: rgba(16, 185, 129, 0.08);
-          border: 1px solid rgba(16, 185, 129, 0.25);
-          color: #34d399;
-        }
-
-        .feedback-verification-message.warning {
-          background: rgba(251, 191, 36, 0.08);
-          border: 1px solid rgba(251, 191, 36, 0.25);
-          color: #fbbf24;
-        }
-
-        .feedback-verification-message.error {
-          background: rgba(248, 113, 113, 0.08);
-          border: 1px solid rgba(248, 113, 113, 0.25);
-          color: #f87171;
-        }
-
-        .student-rating-options {
-          display: flex;
-          gap: 10px;
-        }
-
-        .student-rating-btn {
-          width: 46px;
-          height: 42px;
-
-          background: #ffffff;
-          color: #047857;
-
-          border: 1px solid #10b981;
-          border-radius: 8px;
-
-          font-size: 14px;
-          font-weight: 700;
-
-          cursor: pointer;
-
-          transition:
-            background 0.2s ease,
-            color 0.2s ease,
-            border-color 0.2s ease,
-            transform 0.2s ease;
-        }
-
-        .student-rating-btn:hover {
-          background: #d1fae5;
-          color: #065f46;
-          border-color: #059669;
-          transform: translateY(-1px);
-        }
-
-        .student-rating-btn.active {
-          background: #10b981;
-          color: #ffffff;
-          border-color: #10b981;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.22);
-        }
-
-        .student-rating-btn.active:hover {
-          background: #059669;
-          color: #ffffff;
-        }
-
-        .student-rating-label {
-          color: #64748b;
-          font-size: 12px;
-        }
-
-        .student-feedback-note {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          padding: 12px 14px;
-          margin-top: 4px;
-          background: rgba(16, 185, 129, 0.06);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: 9px;
-        }
-
-        .student-feedback-note strong {
-          color: #34d399;
-          font-size: 12px;
-        }
-
-        .student-feedback-note span {
-          color: #94a3b8;
-          font-size: 12px;
-          line-height: 1.5;
-        }
-
-        @media (max-width: 600px) {
-
-          .feedback-verify-row {
-            flex-direction: column;
-          }
-
-          .verify-feedback-btn {
-            width: 100%;
-          }
-
-          .student-rating-options {
-            flex-wrap: wrap;
-          }
-
-        }
-
-      `}</style>
     </>
   );
-}
+};
 
 export default StudentDashboard;

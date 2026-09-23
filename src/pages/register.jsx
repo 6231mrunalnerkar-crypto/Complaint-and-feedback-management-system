@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../styles/Auth.css";
+import api from "../services/api";
 
 function Register() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -19,7 +22,10 @@ function Register() {
     consent: false,
   });
 
-  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // ================= CALCULATE AGE =================
 
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return "";
@@ -27,10 +33,13 @@ function Register() {
     const birthDate = new Date(dateOfBirth);
     const today = new Date();
 
-    let age = today.getFullYear() - birthDate.getFullYear();
+    let age =
+      today.getFullYear() -
+      birthDate.getFullYear();
 
     const monthDifference =
-      today.getMonth() - birthDate.getMonth();
+      today.getMonth() -
+      birthDate.getMonth();
 
     if (
       monthDifference < 0 ||
@@ -43,8 +52,18 @@ function Register() {
     return age >= 0 ? age : "";
   };
 
+  // ================= HANDLE CHANGE =================
+
   const handleChange = (event) => {
-    const { name, value, type, checked, files } = event.target;
+    const {
+      name,
+      value,
+      type,
+      checked,
+      files,
+    } = event.target;
+
+    setError("");
 
     if (name === "dateOfBirth") {
       setFormData((previous) => ({
@@ -52,6 +71,7 @@ function Register() {
         dateOfBirth: value,
         age: calculateAge(value),
       }));
+
       return;
     }
 
@@ -60,14 +80,16 @@ function Register() {
         ...previous,
         [name]: checked,
       }));
+
       return;
     }
 
     if (type === "file") {
       setFormData((previous) => ({
         ...previous,
-        [name]: files[0] || null,
+        [name]: files?.[0] || null,
       }));
+
       return;
     }
 
@@ -77,66 +99,141 @@ function Register() {
     }));
   };
 
-  const handleRegister = (event) => {
+  // ================= REGISTER =================
+
+  const handleRegister = async (event) => {
     event.preventDefault();
 
+    if (loading) return;
+
     if (!formData.consent) {
-      alert("Please provide your consent before creating an account.");
+      setError(
+        "Please provide your consent before creating an account."
+      );
       return;
     }
 
-    /*
-      Store the complete student profile information.
+    if (!formData.identityProof) {
+      setError(
+        "Please upload a valid proof of identity."
+      );
+      return;
+    }
 
-      The actual identity-proof file is NOT stored in localStorage.
-      Only its filename is retained so the profile can indicate
-      that a document was submitted.
-    */
-    const studentUser = {
-      role: "student",
+    try {
+      setLoading(true);
+      setError("");
 
-      id: formData.rollNumber,
+      // ================= BACKEND REGISTRATION =================
 
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      const response = await api.post(
+        "/auth/register",
+        {
+          firstName:
+            formData.firstName.trim(),
 
-      name: `${formData.firstName} ${formData.lastName}`.trim(),
+          lastName:
+            formData.lastName.trim(),
 
-      institution: formData.institution,
+          name:
+            `${formData.firstName} ${formData.lastName}`.trim(),
 
-      dateOfBirth: formData.dateOfBirth,
-      age: formData.age,
+          institution:
+            formData.institution.trim(),
 
-      address: formData.address,
+          dateOfBirth:
+            formData.dateOfBirth,
 
-      rollNumber: formData.rollNumber,
+          age:
+            formData.age,
 
-      email: formData.email,
+          address:
+            formData.address.trim(),
 
-      contact: formData.contact,
+          rollNumber:
+            formData.rollNumber.trim(),
 
-      identityProofName: formData.identityProof
-        ? formData.identityProof.name
-        : "",
+          email:
+            formData.email.trim(),
 
-      identityProofSubmitted: Boolean(formData.identityProof),
+          contact:
+            formData.contact.trim(),
 
-      accountStatus: "Active",
+          password:
+            formData.password,
 
-      registeredOn: new Date().toISOString().split("T")[0],
-    };
+          identityProofName:
+            formData.identityProof.name,
 
-    localStorage.setItem(
-      "cfms_user",
-      JSON.stringify(studentUser)
-    );
+          identityProofSubmitted:
+            Boolean(formData.identityProof),
 
-    /*
-      Profile photo is deliberately NOT created here.
-      It will be managed separately from the Profile page.
-    */
+          consent:
+            formData.consent,
+        }
+      );
 
-    navigate("/login");
+      const data = response?.data || {};
+
+      // ================= TOKEN =================
+
+      const token =
+        data.token ||
+        data.accessToken ||
+        data.jwt;
+
+      // ================= USER =================
+
+      const user =
+        data.user ||
+        data.account ||
+        data.profile;
+
+      /*
+        Some registration APIs may return only a
+        success message and require the user to login.
+        Therefore token/user are handled when available.
+      */
+
+      if (token) {
+        localStorage.setItem(
+          "cfms_token",
+          token
+        );
+      }
+
+      if (user) {
+        localStorage.setItem(
+          "cfms_user",
+          JSON.stringify(user)
+        );
+
+        localStorage.setItem(
+          "userRole",
+          user.role || "student"
+        );
+      }
+
+      // ================= SUCCESS =================
+
+      alert(
+        "Account created successfully. Please sign in."
+      );
+
+      navigate("/login");
+    } catch (err) {
+      console.error(
+        "Registration failed:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -146,14 +243,25 @@ function Register() {
       <main className="auth-page register-page">
         <div className="auth-card register-card">
 
+          {/* ================= BACK HOME ================= */}
+
           <div className="auth-top-navigation">
-            <Link to="/" className="auth-home-btn">
+            <Link
+              to="/"
+              className="auth-home-btn"
+            >
               ← Home
             </Link>
           </div>
 
+          {/* ================= HEADER ================= */}
+
           <div className="auth-header">
-            <Link to="/" className="auth-logo">
+
+            <Link
+              to="/"
+              className="auth-logo"
+            >
               <span>C</span>
               <strong>CampusVoice</strong>
             </Link>
@@ -162,20 +270,33 @@ function Register() {
               STUDENT REGISTRATION
             </span>
 
-            <h1>Create Account</h1>
+            <h1>
+              Create Account
+            </h1>
 
             <p>
               Register your account to submit and track
               campus complaints and feedback.
             </p>
+
           </div>
+
+          {/* ================= ERROR ================= */}
+
+          {error && (
+            <div className="form-error">
+              {error}
+            </div>
+          )}
+
+          {/* ================= FORM ================= */}
 
           <form
             className="auth-form register-form"
             onSubmit={handleRegister}
           >
 
-            {/* PERSONAL INFORMATION */}
+            {/* ================= PERSONAL INFORMATION ================= */}
 
             <div className="form-section-title">
               Personal Information
@@ -193,6 +314,7 @@ function Register() {
                   name="firstName"
                   type="text"
                   required
+                  disabled={loading}
                   placeholder="Enter first name"
                   value={formData.firstName}
                   onChange={handleChange}
@@ -209,6 +331,7 @@ function Register() {
                   name="lastName"
                   type="text"
                   required
+                  disabled={loading}
                   placeholder="Enter last name"
                   value={formData.lastName}
                   onChange={handleChange}
@@ -218,6 +341,7 @@ function Register() {
             </div>
 
             <div className="form-group">
+
               <label htmlFor="institution">
                 College / Institution <span>*</span>
               </label>
@@ -227,15 +351,18 @@ function Register() {
                 name="institution"
                 type="text"
                 required
+                disabled={loading}
                 placeholder="Enter your college or institution"
                 value={formData.institution}
                 onChange={handleChange}
               />
+
             </div>
 
             <div className="form-row">
 
               <div className="form-group">
+
                 <label htmlFor="dateOfBirth">
                   Date of Birth <span>*</span>
                 </label>
@@ -245,12 +372,15 @@ function Register() {
                   name="dateOfBirth"
                   type="date"
                   required
+                  disabled={loading}
                   value={formData.dateOfBirth}
                   onChange={handleChange}
                 />
+
               </div>
 
               <div className="form-group">
+
                 <label htmlFor="age">
                   Age
                 </label>
@@ -259,25 +389,27 @@ function Register() {
                   id="age"
                   name="age"
                   type="text"
+                  readOnly
                   value={
                     formData.age
                       ? `${formData.age} years`
                       : ""
                   }
                   placeholder="Automatically calculated"
-                  readOnly
                 />
+
               </div>
 
             </div>
 
-            {/* CONTACT INFORMATION */}
+            {/* ================= CONTACT INFORMATION ================= */}
 
             <div className="form-section-title">
               Contact Information
             </div>
 
             <div className="form-group">
+
               <label htmlFor="address">
                 Address <span>*</span>
               </label>
@@ -286,15 +418,18 @@ function Register() {
                 id="address"
                 name="address"
                 required
+                disabled={loading}
                 placeholder="Enter your complete address"
                 value={formData.address}
                 onChange={handleChange}
               />
+
             </div>
 
             <div className="form-row">
 
               <div className="form-group">
+
                 <label htmlFor="rollNumber">
                   Desired Roll Number <span>*</span>
                 </label>
@@ -304,13 +439,16 @@ function Register() {
                   name="rollNumber"
                   type="text"
                   required
+                  disabled={loading}
                   placeholder="e.g. STU-2026-001"
                   value={formData.rollNumber}
                   onChange={handleChange}
                 />
+
               </div>
 
               <div className="form-group">
+
                 <label htmlFor="contact">
                   Contact Number <span>*</span>
                 </label>
@@ -322,15 +460,18 @@ function Register() {
                   required
                   pattern="[0-9]{10}"
                   maxLength="10"
+                  disabled={loading}
                   placeholder="10-digit mobile number"
                   value={formData.contact}
                   onChange={handleChange}
                 />
+
               </div>
 
             </div>
 
             <div className="form-group">
+
               <label htmlFor="registerEmail">
                 Email Address <span>*</span>
               </label>
@@ -340,13 +481,16 @@ function Register() {
                 name="email"
                 type="email"
                 required
+                disabled={loading}
                 placeholder="student@campus.edu"
                 value={formData.email}
                 onChange={handleChange}
               />
+
             </div>
 
             <div className="form-group">
+
               <label htmlFor="registerPassword">
                 Password <span>*</span>
               </label>
@@ -357,6 +501,7 @@ function Register() {
                 type="password"
                 required
                 minLength="6"
+                disabled={loading}
                 placeholder="Create a password"
                 value={formData.password}
                 onChange={handleChange}
@@ -365,15 +510,17 @@ function Register() {
               <small className="field-help">
                 Password must contain at least 6 characters.
               </small>
+
             </div>
 
-            {/* IDENTITY VERIFICATION */}
+            {/* ================= IDENTITY VERIFICATION ================= */}
 
             <div className="form-section-title">
               Identity Verification
             </div>
 
             <div className="form-group">
+
               <label htmlFor="identityProof">
                 Proof of Identity <span>*</span>
               </label>
@@ -383,24 +530,36 @@ function Register() {
                 name="identityProof"
                 type="file"
                 required
+                disabled={loading}
                 accept=".jpg,.jpeg,.png,.pdf"
                 onChange={handleChange}
               />
 
               <small className="field-help">
-                Upload a valid college ID card in JPG, PNG, or PDF format.
+                Upload a valid college ID card in JPG,
+                PNG, or PDF format.
               </small>
+
+              {formData.identityProof && (
+                <small className="field-help">
+                  Selected:{" "}
+                  {formData.identityProof.name}
+                </small>
+              )}
+
             </div>
 
-            {/* CONSENT */}
+            {/* ================= CONSENT ================= */}
 
             <div className="consent-box">
+
               <label className="consent-label">
 
                 <input
                   type="checkbox"
                   name="consent"
                   required
+                  disabled={loading}
                   checked={formData.consent}
                   onChange={handleChange}
                 />
@@ -414,18 +573,27 @@ function Register() {
                 </span>
 
               </label>
+
             </div>
+
+            {/* ================= SUBMIT ================= */}
 
             <button
               type="submit"
               className="auth-submit"
+              disabled={loading}
             >
-              Create Account
+              {loading
+                ? "Creating Account..."
+                : "Create Account"}
             </button>
 
           </form>
 
+          {/* ================= FOOTER ================= */}
+
           <div className="auth-footer">
+
             <span>
               Already have an account?
             </span>
@@ -433,6 +601,7 @@ function Register() {
             <Link to="/login">
               Sign In
             </Link>
+
           </div>
 
         </div>

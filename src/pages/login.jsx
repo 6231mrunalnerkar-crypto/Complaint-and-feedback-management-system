@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../styles/Auth.css";
+import api from "../services/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ function Login() {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // ================= HANDLE CHANGE =================
 
@@ -30,25 +32,89 @@ function Login() {
 
   // ================= NORMAL LOGIN =================
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
+
+    if (loading) return;
 
     const email = formData.email.trim();
 
-    // ================= STUDENT LOGIN =================
+    // ================= VALIDATION =================
 
-    if (formData.role === "student") {
-      if (!email || !formData.password.trim()) {
-        setError(
-          "Please enter your email and password."
+    if (!email) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (formData.role === "student" && !formData.password.trim()) {
+      setError("Please enter your password.");
+      return;
+    }
+
+    if (
+      (formData.role === "staff" ||
+        formData.role === "admin") &&
+      !formData.loginCode.trim()
+    ) {
+      setError(
+        "Please enter your unique login code."
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // ================= BACKEND LOGIN =================
+
+      const response = await api.post("/auth/login", {
+        email,
+        password:
+          formData.role === "student"
+            ? formData.password
+            : undefined,
+        loginCode:
+          formData.role !== "student"
+            ? formData.loginCode.trim()
+            : undefined,
+        role: formData.role,
+      });
+
+      const data = response?.data || {};
+
+      // ================= JWT TOKEN =================
+
+      const token =
+        data.token ||
+        data.accessToken ||
+        data.jwt;
+
+      if (!token) {
+        throw new Error(
+          "Login succeeded but no authentication token was received."
         );
-        return;
       }
 
-      const user = {
-        email,
-        role: "student",
-      };
+      // ================= USER DATA =================
+
+      const user =
+        data.user ||
+        data.account ||
+        data.profile;
+
+      if (!user) {
+        throw new Error(
+          "Login succeeded but user information was not received."
+        );
+      }
+
+      // ================= STORE AUTH DATA =================
+
+      localStorage.setItem(
+        "cfms_token",
+        token
+      );
 
       localStorage.setItem(
         "cfms_user",
@@ -57,64 +123,59 @@ function Login() {
 
       localStorage.setItem(
         "userRole",
-        "student"
+        user.role || formData.role
       );
 
-      navigate("/student-dashboard");
+      // ================= ROLE NAVIGATION =================
 
-      return;
-    }
+      const loggedInRole =
+        user.role || formData.role;
 
-    // ================= STAFF / ADMIN LOGIN =================
+      if (loggedInRole === "student") {
+        navigate("/student-dashboard");
+        return;
+      }
 
-    if (!email || !formData.loginCode.trim()) {
+      if (loggedInRole === "staff") {
+        navigate("/staff-dashboard");
+        return;
+      }
+
+      if (loggedInRole === "admin") {
+        navigate("/admin-dashboard");
+        return;
+      }
+
+      throw new Error(
+        "Invalid user role received from server."
+      );
+    } catch (err) {
+      console.error("Login failed:", err);
+
       setError(
-        "Please enter your email and unique login code."
+        err.message ||
+          "Login failed. Please check your credentials and try again."
       );
-      return;
-    }
-
-    const user = {
-      email,
-      role: formData.role,
-      loginCode: formData.loginCode.trim(),
-    };
-
-    localStorage.setItem(
-      "cfms_user",
-      JSON.stringify(user)
-    );
-
-    localStorage.setItem(
-      "userRole",
-      formData.role
-    );
-
-    // ================= ROLE NAVIGATION =================
-
-    if (formData.role === "staff") {
-      navigate("/staff-dashboard");
-    }
-
-    if (formData.role === "admin") {
-      navigate("/admin-dashboard");
+    } finally {
+      setLoading(false);
     }
   };
 
   // ================= GUEST LOGIN =================
 
   const handleGuestLogin = () => {
+    localStorage.removeItem("cfms_token");
     localStorage.removeItem("cfms_user");
-
-    localStorage.setItem(
-      "userRole",
-      "guest"
-    );
 
     const guestUser = {
       role: "guest",
       anonymous: true,
     };
+
+    localStorage.setItem(
+      "userRole",
+      "guest"
+    );
 
     localStorage.setItem(
       "cfms_user",
@@ -216,6 +277,7 @@ function Login() {
                 value={formData.role}
                 onChange={handleChange}
                 required
+                disabled={loading}
               >
 
                 <option value="student">
@@ -247,6 +309,7 @@ function Login() {
                 name="email"
                 type="email"
                 required
+                disabled={loading}
                 placeholder={
                   isStudent
                     ? "Enter your student email"
@@ -261,7 +324,7 @@ function Login() {
             </div>
 
             {/* =================================================
-                STUDENT PASSWORD ONLY
+                STUDENT PASSWORD
             ================================================= */}
 
             {isStudent && (
@@ -276,6 +339,7 @@ function Login() {
                   name="password"
                   type="password"
                   required
+                  disabled={loading}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
@@ -285,7 +349,7 @@ function Login() {
             )}
 
             {/* =================================================
-                STAFF / ADMIN UNIQUE CODE ONLY
+                STAFF / ADMIN UNIQUE CODE
             ================================================= */}
 
             {!isStudent && (
@@ -300,6 +364,7 @@ function Login() {
                   name="loginCode"
                   type="text"
                   required
+                  disabled={loading}
                   placeholder={
                     isStaff
                       ? "Enter staff unique login code"
@@ -332,8 +397,11 @@ function Login() {
             <button
               type="submit"
               className="auth-submit"
+              disabled={loading}
             >
-              {isStudent
+              {loading
+                ? "Signing In..."
+                : isStudent
                 ? "Sign In"
                 : "Access Portal"}
             </button>
@@ -420,6 +488,7 @@ function Login() {
                 <button
                   type="button"
                   onClick={handleGuestLogin}
+                  disabled={loading}
                   style={{
                     width: "100%",
                     padding: "11px",
@@ -430,7 +499,9 @@ function Login() {
                     borderRadius: "8px",
                     fontSize: "13px",
                     fontWeight: "700",
-                    cursor: "pointer",
+                    cursor: loading
+                      ? "not-allowed"
+                      : "pointer",
                   }}
                 >
                   Continue as Guest

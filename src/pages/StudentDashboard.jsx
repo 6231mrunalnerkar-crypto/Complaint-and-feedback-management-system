@@ -1,1464 +1,1223 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import "../styles/Dashboard.css";
 
 import {
-  getStoredComplaints,
-  saveComplaint,
-} from "../utils/mockData";
+  useComplaints,
+} from "../context/ComplaintContext";
 
-import {
-  getStoredFeedback,
-  saveFeedback,
-  hasSubmittedFeedback,
-} from "../utils/feedbackData";
-
-import { getStoredCategories } from "../utils/categoryData";
-
-const StudentDashboard = () => {
+function StudentDashboard() {
   const navigate = useNavigate();
+
+  const {
+    complaints,
+    loading,
+    error,
+    loadComplaints,
+    addComplaint,
+  } = useComplaints();
+
+  /* =========================================================
+     USER
+     ========================================================= */
 
   const [user] = useState(() => {
     try {
-      return (
-        JSON.parse(localStorage.getItem("cfms_user")) || null
+      const storedUser =
+        localStorage.getItem("cfms_user");
+
+      if (!storedUser) {
+        return null;
+      }
+
+      const parsedUser =
+        JSON.parse(storedUser);
+
+      return parsedUser &&
+        typeof parsedUser === "object"
+        ? parsedUser
+        : null;
+    } catch (error) {
+      console.error(
+        "Unable to load user:",
+        error
       );
-    } catch {
+
       return null;
     }
   });
 
-  const [complaints, setComplaints] = useState(() =>
-    getStoredComplaints()
-  );
+  /* =========================================================
+     LOAD REAL COMPLAINTS FROM BACKEND
+     ========================================================= */
 
-  const [feedbacks, setFeedbacks] = useState(() =>
-    getStoredFeedback()
-  );
+  useEffect(() => {
+    const token =
+      localStorage.getItem("cfms_token");
 
-  const [categories] = useState(() =>
-    getStoredCategories()
-  );
-
-  const [showComplaintModal, setShowComplaintModal] =
-    useState(false);
-
-  const [showFeedbackModal, setShowFeedbackModal] =
-    useState(false);
-
-  const [newComplaint, setNewComplaint] = useState({
-    title: "",
-    category: "Infrastructure",
-    priority: "Medium",
-    description: "",
-  });
-
-  const [feedbackComplaintId, setFeedbackComplaintId] =
-    useState("");
-
-  const [feedbackRating, setFeedbackRating] = useState(0);
-
-  const [feedbackCategory, setFeedbackCategory] =
-    useState("General");
-
-  const [feedbackComment, setFeedbackComment] =
-    useState("");
-
-  /* =========================================
-     STUDENT INFORMATION
-  ========================================= */
-
-  const displayName =
-    user?.name ||
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-    user?.fullName ||
-    "Student";
-
-  const studentInitial =
-    displayName.charAt(0).toUpperCase();
-
-  /* =========================================
-     CATEGORIES
-  ========================================= */
-
-  const availableCategories =
-    categories?.length > 0
-      ? categories
-      : [
-          "Infrastructure",
-          "Library",
-          "Canteen",
-          "Academic",
-          "Appliances",
-          "Ragging-related",
-          "Molestation-related",
-          "Campus Crime",
-          "Faculty Complaints",
-        ];
-
-  /* =========================================
-     STUDENT COMPLAINTS
-  ========================================= */
-
-  const studentComplaints = useMemo(() => {
-    const studentName =
-      user?.name ||
-      user?.fullName ||
-      `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
-
-    return complaints
-      .filter((complaint) => {
-        if (complaint.anonymous) return false;
-
-        return (
-          complaint.submittedBy === studentName ||
-          complaint.studentId === user?.studentId ||
-          complaint.email === user?.email
-        );
-      })
-      .sort((a, b) => {
-        const dateA = new Date(
-          a.date || a.createdAt || 0
-        ).getTime();
-
-        const dateB = new Date(
-          b.date || b.createdAt || 0
-        ).getTime();
-
-        return dateB - dateA;
-      });
-  }, [complaints, user]);
-
-  /* =========================================
-     STUDENT FEEDBACKS
-  ========================================= */
-
-  const studentFeedbacks = useMemo(() => {
-    const studentName =
-      user?.name ||
-      user?.fullName ||
-      `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
-
-    return feedbacks
-      .filter((feedback) => {
-        if (feedback.anonymous) return false;
-
-        return (
-          feedback.submittedBy === studentName ||
-          feedback.studentId === user?.studentId ||
-          feedback.email === user?.email
-        );
-      })
-      .sort((a, b) => {
-        const dateA = new Date(
-          a.date || a.createdAt || 0
-        ).getTime();
-
-        const dateB = new Date(
-          b.date || b.createdAt || 0
-        ).getTime();
-
-        return dateB - dateA;
-      });
-  }, [feedbacks, user]);
-
-  /* =========================================
-     COMPLAINT STATISTICS
-  ========================================= */
-
-  const totalComplaints =
-    studentComplaints.length;
-
-  const pendingComplaints =
-    studentComplaints.filter(
-      (complaint) =>
-        complaint.status === "Pending"
-    ).length;
-
-  const inProgressComplaints =
-    studentComplaints.filter(
-      (complaint) =>
-        complaint.status === "In Progress" ||
-        complaint.status === "In-Progress"
-    ).length;
-
-  const resolvedComplaints =
-    studentComplaints.filter(
-      (complaint) =>
-        complaint.status === "Resolved" ||
-        complaint.status === "Completed"
-    ).length;
-
-  /* =========================================
-     LOGOUT
-  ========================================= */
-
-  const handleLogout = () => {
-    localStorage.removeItem("cfms_user");
-
-    toast.success(
-      "Logged out successfully"
-    );
-
-    navigate("/login");
-  };
-
-  /* =========================================
-     COMPLAINT FORM
-  ========================================= */
-
-  const handleComplaintChange = (event) => {
-    const { name, value } = event.target;
-
-    setNewComplaint((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-  };
-
-  const handleComplaintSubmit = (event) => {
-    event.preventDefault();
-
-    if (
-      !newComplaint.title.trim() ||
-      !newComplaint.description.trim()
-    ) {
-      toast.error(
-        "Please enter complaint title and description."
-      );
-
+    if (!token) {
+      navigate("/login");
       return;
     }
 
-    const complaintId = `CMP-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
+    loadComplaints();
+  }, [loadComplaints, navigate]);
 
-    const studentName =
-      user?.name ||
-      user?.fullName ||
-      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-      "Student";
+  /* =========================================================
+     MODAL
+     ========================================================= */
 
-    const complaint = {
-      id: complaintId,
+  const [showModal, setShowModal] =
+    useState(false);
 
-      title: newComplaint.title.trim(),
+  const [submitting, setSubmitting] =
+    useState(false);
 
-      subject: newComplaint.title.trim(),
+  const [submitError, setSubmitError] =
+    useState("");
 
-      category: newComplaint.category,
-
-      priority: newComplaint.priority,
-
-      description:
-        newComplaint.description.trim(),
-
-      status: "Pending",
-
-      anonymous: false,
-
-      submittedBy: studentName,
-
-      studentId: user?.studentId || "",
-
-      email: user?.email || "",
-
-      date: new Date()
-        .toISOString()
-        .split("T")[0],
-
-      createdAt: new Date().toISOString(),
-    };
-
-    saveComplaint(complaint);
-
-    setComplaints(getStoredComplaints());
-
-    setNewComplaint({
+  const [newComplaint, setNewComplaint] =
+    useState({
       title: "",
       category: "Infrastructure",
       priority: "Medium",
       description: "",
     });
 
-    setShowComplaintModal(false);
+  /* =========================================================
+     COMPLAINT COUNTS
+     ========================================================= */
 
-    toast.success(
-      `Complaint submitted successfully. ID: ${complaintId}`
+  const pendingCount = complaints.filter(
+    (complaint) => {
+      const status = String(
+        complaint.status || ""
+      ).toLowerCase();
+
+      return (
+        status === "submitted" ||
+        status === "pending" ||
+        status === "under review"
+      );
+    }
+  ).length;
+
+  const progressCount = complaints.filter(
+    (complaint) =>
+      String(
+        complaint.status || ""
+      ).toLowerCase() ===
+      "in progress"
+  ).length;
+
+  const resolvedCount = complaints.filter(
+    (complaint) =>
+      String(
+        complaint.status || ""
+      ).toLowerCase() ===
+      "resolved"
+  ).length;
+
+  /* =========================================================
+     SORT COMPLAINTS
+     ========================================================= */
+
+  const sortedComplaints = useMemo(() => {
+    return [...complaints].sort(
+      (a, b) => {
+        const dateA = new Date(
+          a.createdAt ||
+          a.date ||
+          a.updatedAt ||
+          0
+        ).getTime();
+
+        const dateB = new Date(
+          b.createdAt ||
+          b.date ||
+          b.updatedAt ||
+          0
+        ).getTime();
+
+        return dateB - dateA;
+      }
     );
+  }, [complaints]);
+
+  /* =========================================================
+     FORM CHANGE
+     ========================================================= */
+
+  const handleComplaintChange = (
+    event
+  ) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setNewComplaint(
+      (previous) => ({
+        ...previous,
+        [name]: value,
+      })
+    );
+
+    setSubmitError("");
   };
 
-  /* =========================================
-     FEEDBACK MODAL
-  ========================================= */
+  /* =========================================================
+     SUBMIT COMPLAINT
+     ========================================================= */
 
-  const openFeedbackModal = () => {
-    if (!studentComplaints.length) {
-      toast.error(
-        "You need to submit a complaint first."
-      );
+  const handleSubmitComplaint =
+    async (event) => {
+      event.preventDefault();
 
-      return;
-    }
+      if (submitting) return;
 
-    const resolvedComplaint =
-      studentComplaints.find(
-        (complaint) =>
-          (complaint.status === "Resolved" ||
-            complaint.status === "Completed") &&
-          !hasSubmittedFeedback(
-            complaint.id
-          )
-      );
+      const cleanTitle =
+        newComplaint.title.trim();
 
-    if (!resolvedComplaint) {
-      toast.error(
-        "Feedback can only be submitted for a resolved complaint."
-      );
+      const cleanDescription =
+        newComplaint.description.trim();
 
-      return;
-    }
+      if (!cleanTitle) {
+        setSubmitError(
+          "Please enter a complaint title."
+        );
+        return;
+      }
 
-    setFeedbackComplaintId(
-      resolvedComplaint.id
-    );
+      if (!cleanDescription) {
+        setSubmitError(
+          "Please enter a complaint description."
+        );
+        return;
+      }
 
-    setFeedbackCategory(
-      resolvedComplaint.category ||
-        "General"
-    );
+      try {
+        setSubmitting(true);
+        setSubmitError("");
 
-    setFeedbackRating(0);
+        const createdComplaint =
+          await addComplaint({
+            title: cleanTitle,
 
-    setFeedbackComment("");
+            subject: cleanTitle,
 
-    setShowFeedbackModal(true);
-  };
+            category:
+              newComplaint.category,
 
-  /* =========================================
-     FEEDBACK SUBMIT
-  ========================================= */
+            priority:
+              newComplaint.priority,
 
-  const handleFeedbackSubmit = (event) => {
-    event.preventDefault();
+            description:
+              cleanDescription,
 
-    if (!feedbackComplaintId) {
-      toast.error(
-        "Please select a complaint."
-      );
+            isAnonymous: false,
 
-      return;
-    }
+            studentName:
+              user?.name ||
+              `${user?.firstName || ""} ${
+                user?.lastName || ""
+              }`.trim(),
 
-    const complaint =
-      studentComplaints.find(
-        (item) =>
-          item.id === feedbackComplaintId
-      );
+            email:
+              user?.email || "",
 
-    if (!complaint) {
-      toast.error(
-        "Complaint not found."
-      );
+            rollNumber:
+              user?.rollNumber || "",
 
-      return;
-    }
+            phone:
+              user?.contact ||
+              user?.phone ||
+              "",
+          });
 
-    if (
-      complaint.status !== "Resolved" &&
-      complaint.status !== "Completed"
-    ) {
-      toast.error(
-        "Feedback can only be submitted after the complaint is resolved."
-      );
+        setNewComplaint({
+          title: "",
+          category:
+            "Infrastructure",
+          priority:
+            "Medium",
+          description: "",
+        });
 
-      return;
-    }
+        setShowModal(false);
 
-    if (
-      hasSubmittedFeedback(
-        feedbackComplaintId
-      )
-    ) {
-      toast.error(
-        "Feedback has already been submitted for this complaint."
-      );
+        if (
+          createdComplaint?.referenceId
+        ) {
+          alert(
+            `Complaint submitted successfully.\nReference ID: ${createdComplaint.referenceId}`
+          );
+        } else {
+          alert(
+            "Complaint submitted successfully."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Unable to submit complaint:",
+          error
+        );
 
-      return;
-    }
-
-    if (!feedbackComment.trim()) {
-      toast.error(
-        "Please enter your feedback."
-      );
-
-      return;
-    }
-
-    if (!feedbackRating) {
-      toast.error(
-        "Please select a rating."
-      );
-
-      return;
-    }
-
-    const studentName =
-      user?.name ||
-      user?.fullName ||
-      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-      "Student";
-
-    const feedback = {
-      id: `FDB-${Math.floor(
-        1000 + Math.random() * 9000
-      )}`,
-
-      complaintId:
-        feedbackComplaintId,
-
-      category: feedbackCategory,
-
-      rating: feedbackRating,
-
-      comment:
-        feedbackComment.trim(),
-
-      anonymous: false,
-
-      submittedBy: studentName,
-
-      studentId:
-        user?.studentId || "",
-
-      email:
-        user?.email || "",
-
-      date: new Date()
-        .toISOString()
-        .split("T")[0],
-
-      createdAt:
-        new Date().toISOString(),
+        setSubmitError(
+          error.message ||
+            "Unable to submit complaint. Please try again."
+        );
+      } finally {
+        setSubmitting(false);
+      }
     };
 
-    saveFeedback(feedback);
+  /* =========================================================
+     LOGOUT
+     ========================================================= */
 
-    setFeedbacks(
-      getStoredFeedback()
+  const handleLogout = () => {
+    localStorage.removeItem(
+      "cfms_token"
     );
 
-    setShowFeedbackModal(false);
-
-    setFeedbackComplaintId("");
-
-    setFeedbackRating(0);
-
-    setFeedbackCategory(
-      "General"
+    localStorage.removeItem(
+      "cfms_user"
     );
 
-    setFeedbackComment("");
+    localStorage.removeItem(
+      "userRole"
+    );
 
-    toast.success(
-      "Feedback submitted successfully."
+    navigate("/login");
+  };
+
+  /* =========================================================
+     TITLE HELPER
+     ========================================================= */
+
+  const getComplaintTitle = (
+    complaint
+  ) => {
+    return (
+      complaint.title ||
+      complaint.subject ||
+      "Untitled Complaint"
     );
   };
 
-  /* =========================================
-     STATUS STYLE
-  ========================================= */
+  /* =========================================================
+     COMPLAINT ID HELPER
+     ========================================================= */
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "Resolved":
-      case "Completed":
-        return "status-badge resolved";
+  const getComplaintId = (
+    complaint
+  ) => {
+    return (
+      complaint.referenceId ||
+      complaint.id ||
+      complaint._id ||
+      "—"
+    );
+  };
 
-      case "In Progress":
-      case "In-Progress":
-        return "status-badge progress";
+  /* =========================================================
+     STATUS CLASS
+     ========================================================= */
 
-      case "Pending":
-      default:
-        return "status-badge pending";
+  const getStatusClass = (
+    status
+  ) => {
+    const cleanStatus =
+      String(status || "")
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+    return `status-${cleanStatus}`;
+  };
+
+  /* =========================================================
+     PRIORITY CLASS
+     ========================================================= */
+
+  const getPriorityClass = (
+    priority
+  ) => {
+    const cleanPriority =
+      String(priority || "")
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+    return `priority-${cleanPriority}`;
+  };
+
+  /* =========================================================
+     FORMAT DATE
+     ========================================================= */
+
+  const formatDate = (
+    date
+  ) => {
+    if (!date) return "—";
+
+    const parsedDate =
+      new Date(date);
+
+    if (
+      Number.isNaN(
+        parsedDate.getTime()
+      )
+    ) {
+      return date;
     }
+
+    return parsedDate.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }
+    );
   };
 
-  /* =========================================
-     PRIORITY STYLE
-  ========================================= */
+  /* =========================================================
+     DISPLAY NAME
+     ========================================================= */
 
-  const getPriorityClass = (priority) => {
-    switch (priority) {
-      case "High":
-        return "priority-badge high";
+  const displayName =
+    user?.name ||
+    `${user?.firstName || ""} ${
+      user?.lastName || ""
+    }`.trim() ||
+    "Student";
 
-      case "Low":
-        return "priority-badge low";
-
-      case "Medium":
-      default:
-        return "priority-badge medium";
-    }
-  };
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
   return (
     <>
       <Navbar />
 
-      <div className="student-dashboard-shell">
+      <div className="dashboard-layout">
 
-        {/* =========================================
-            LEFT INDEX
-        ========================================= */}
+        {/* ===================================================
+            SIDEBAR
+            =================================================== */}
 
         <aside className="sidebar">
 
-          <div className="sidebar-top">
+          <div className="sidebar-brand">
 
-            <div className="sidebar-brand">
-
-              <div className="sidebar-brand-mark">
-                C
-              </div>
-
-              <strong>
-                CampusVoice
-              </strong>
-
-              <span>
-                Student Portal
-              </span>
-
+            <div className="logo-box">
+              C
             </div>
 
-
-            <div className="sidebar-status">
-
-              <span className="sidebar-status-dot"></span>
-
-              <div>
-                <strong>
-                  Student Status
-                </strong>
-
-                <span>
-                  Active
-                </span>
-              </div>
-
-            </div>
-
-
-            {/* =========================================
-                FIXED ROUTING
-            ========================================= */}
-
-            <nav className="sidebar-menu">
-
-              <Link
-                to="/student-dashboard"
-                className="sidebar-menu-item active"
-              >
-                Dashboard
-              </Link>
-
-              <Link
-                to="/my-complaints"
-                className="sidebar-menu-item"
-              >
-                My Complaints
-              </Link>
-
-              <Link
-                to="/my-feedbacks"
-                className="sidebar-menu-item"
-              >
-                My Feedbacks
-              </Link>
-
-              <Link
-                to="/profile"
-                className="sidebar-menu-item"
-              >
-                Profile
-              </Link>
-
-            </nav>
+            <span>
+              CampusVoice
+            </span>
 
           </div>
 
+          <nav className="sidebar-menu">
 
-          <div className="sidebar-bottom">
+            <a
+              href="#overview"
+              className="active"
+            >
+              Overview
+            </a>
 
-            <div className="sidebar-help">
+            <a href="#my-complaints">
+              My Complaints
+            </a>
 
-              <strong>
-                Need Help?
-              </strong>
+            <a href="#my-feedbacks">
+              My Feedbacks
+            </a>
 
-              Contact the administration for
-              assistance with your complaints.
-
-            </div>
-
+            <Link to="/profile">
+              Profile
+            </Link>
 
             <button
               type="button"
-              className="sidebar-logout"
+              className="logout-btn"
               onClick={handleLogout}
             >
               Logout
             </button>
 
-          </div>
+          </nav>
 
         </aside>
 
+        {/* ===================================================
+            MAIN CONTENT
+            =================================================== */}
 
-        {/* =========================================
-            RIGHT SIDE
-        ========================================= */}
+        <main className="dashboard-content">
 
-        <div className="dashboard-main-area">
+          {/* =================================================
+              HEADER
+              ================================================= */}
 
-          <main className="dashboard-content">
+          <header
+            className="dashboard-header"
+            id="overview"
+          >
 
-            {/* =========================================
-                HEADER
-            ========================================= */}
+            <div>
 
-            <section className="dashboard-header">
+              <span className="dashboard-eyebrow">
+                CAMPUSVOICE STUDENT PORTAL
+              </span>
+
+              <h1>
+                Student Dashboard
+              </h1>
+
+              <p>
+                Welcome back,{" "}
+                {displayName}. Track your
+                complaints, feedback, and
+                campus concerns.
+              </p>
+
+            </div>
+
+            <button
+              type="button"
+              className="btn-primary-large"
+              onClick={() => {
+                setSubmitError("");
+                setShowModal(true);
+              }}
+            >
+              + Submit New Complaint
+            </button>
+
+          </header>
+
+          {/* =================================================
+              ERROR
+              ================================================= */}
+
+          {error && (
+            <div className="form-error">
+              {error}
+            </div>
+          )}
+
+          {/* =================================================
+              LOADING
+              ================================================= */}
+
+          {loading && (
+            <div
+              className="empty-state"
+              style={{
+                marginBottom: "24px",
+              }}
+            >
+              <h3>
+                Loading your complaints...
+              </h3>
+
+              <p>
+                Please wait while we fetch
+                your latest complaint data.
+              </p>
+            </div>
+          )}
+
+          {/* =================================================
+              STATISTICS
+              ================================================= */}
+
+          <div className="dashboard-stats">
+
+            <div className="stat-card">
+
+              <h3>
+                Total Complaints
+              </h3>
+
+              <p>
+                {complaints.length}
+              </p>
+
+              <small>
+                All submitted complaints
+              </small>
+
+            </div>
+
+            <div className="stat-card">
+
+              <h3>
+                Pending
+              </h3>
+
+              <p>
+                {pendingCount}
+              </p>
+
+              <small>
+                Awaiting review
+              </small>
+
+            </div>
+
+            <div className="stat-card">
+
+              <h3>
+                In Progress
+              </h3>
+
+              <p>
+                {progressCount}
+              </p>
+
+              <small>
+                Currently being handled
+              </small>
+
+            </div>
+
+            <div className="stat-card">
+
+              <h3>
+                Resolved
+              </h3>
+
+              <p>
+                {resolvedCount}
+              </p>
+
+              <small>
+                Successfully resolved
+              </small>
+
+            </div>
+
+          </div>
+
+          {/* =================================================
+              MY COMPLAINTS
+              ================================================= */}
+
+          <section
+            className="dashboard-section"
+            id="my-complaints"
+          >
+
+            <div className="section-heading-row">
 
               <div>
 
                 <span className="section-eyebrow">
-                  STUDENT DASHBOARD
+                  COMPLAINT MANAGEMENT
                 </span>
 
-                <h1>
-                  Welcome, {displayName}
-                </h1>
+                <h2>
+                  My Complaints
+                </h2>
 
                 <p>
-                  Manage your complaints, feedback
-                  and student account from one place.
+                  View and track the complaints
+                  you have submitted.
                 </p>
 
               </div>
 
+              <Link
+                to="/track-complaint"
+                className="section-link"
+              >
+                Track Complaint
+              </Link>
+
+            </div>
+
+            {sortedComplaints.length ===
+            0 ? (
+
+              <div className="empty-state">
+
+                <h3>
+                  No complaints yet
+                </h3>
+
+                <p>
+                  You have not submitted any
+                  complaints.
+                </p>
+
+                <button
+                  type="button"
+                  className="empty-state-btn"
+                  onClick={() => {
+                    setSubmitError("");
+                    setShowModal(true);
+                  }}
+                >
+                  Submit Your First Complaint
+                </button>
+
+              </div>
+
+            ) : (
+
+              <div className="table-container">
+
+                <table className="custom-table">
+
+                  <thead>
+
+                    <tr>
+
+                      <th>
+                        Complaint ID
+                      </th>
+
+                      <th>
+                        Complaint
+                      </th>
+
+                      <th>
+                        Category
+                      </th>
+
+                      <th>
+                        Date
+                      </th>
+
+                      <th>
+                        Priority
+                      </th>
+
+                      <th>
+                        Status
+                      </th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody>
+
+                    {sortedComplaints.map(
+                      (complaint) => (
+
+                        <tr
+                          key={
+                            complaint._id ||
+                            complaint.id ||
+                            complaint.referenceId
+                          }
+                        >
+
+                          <td>
+
+                            <strong>
+                              {getComplaintId(
+                                complaint
+                              )}
+                            </strong>
+
+                          </td>
+
+                          <td>
+
+                            <div className="complaint-title-cell">
+
+                              <span>
+                                {getComplaintTitle(
+                                  complaint
+                                )}
+                              </span>
+
+                              {complaint.description && (
+                                <small>
+                                  {complaint
+                                    .description
+                                    .length >
+                                  65
+                                    ? `${complaint.description.slice(
+                                        0,
+                                        65
+                                      )}...`
+                                    : complaint.description}
+                                </small>
+                              )}
+
+                            </div>
+
+                          </td>
+
+                          <td>
+
+                            <span className="category-badge">
+                              {complaint.category ||
+                                "Other"}
+                            </span>
+
+                          </td>
+
+                          <td>
+
+                            {formatDate(
+                              complaint.createdAt ||
+                              complaint.date
+                            )}
+
+                          </td>
+
+                          <td>
+
+                            <span
+                              className={`badge ${getPriorityClass(
+                                complaint.priority
+                              )}`}
+                            >
+                              {complaint.priority ||
+                                "Medium"}
+                            </span>
+
+                          </td>
+
+                          <td>
+
+                            <span
+                              className={`badge ${getStatusClass(
+                                complaint.status
+                              )}`}
+                            >
+                              {complaint.status ||
+                                "Submitted"}
+                            </span>
+
+                          </td>
+
+                        </tr>
+
+                      )
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            )}
+
+          </section>
+
+          {/* =================================================
+              MY FEEDBACKS
+              ================================================= */}
+
+          <section
+            className="dashboard-section"
+            id="my-feedbacks"
+          >
+
+            <div className="section-heading-row">
+
+              <div>
+
+                <span className="section-eyebrow">
+                  FEEDBACK MANAGEMENT
+                </span>
+
+                <h2>
+                  My Feedbacks
+                </h2>
+
+                <p>
+                  Review the feedback you have
+                  submitted through CampusVoice.
+                </p>
+
+              </div>
+
+              <Link
+                to="/feedback"
+                className="section-link"
+              >
+                Give Feedback
+              </Link>
+
+            </div>
+
+            <div className="empty-state">
+
+              <h3>
+                Feedback integration
+              </h3>
+
+              <p>
+                Your feedback section will
+                display submitted feedback
+                after the feedback API is
+                connected.
+              </p>
+
+              <Link
+                to="/feedback"
+                className="empty-state-btn"
+              >
+                Submit Feedback
+              </Link>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              PROFILE PREVIEW
+              ================================================= */}
+
+          <section className="profile-preview-section">
+
+            <div className="profile-preview-content">
+
+              <span className="section-eyebrow">
+                STUDENT ACCOUNT
+              </span>
+
+              <h2>
+                Your Profile
+              </h2>
+
+              <p>
+                View the personal, contact,
+                student, and account information
+                submitted during registration.
+              </p>
+
+            </div>
+
+            <Link
+              to="/profile"
+              className="profile-preview-btn"
+            >
+              View My Profile
+            </Link>
+
+          </section>
+
+          {/* =================================================
+              MANAGE CAMPUS CONCERNS
+              ================================================= */}
+
+          <section className="manage-section">
+
+            <div className="manage-content">
+
+              <span className="section-eyebrow">
+                CAMPUSVOICE SERVICES
+              </span>
+
+              <h2>
+                Manage Your Campus Concerns
+              </h2>
+
+              <p>
+                Submit complaints, track existing
+                issues, and share anonymous
+                feedback through CampusVoice.
+              </p>
+
+            </div>
+
+            <div className="manage-actions">
 
               <button
                 type="button"
-                className="primary-button"
-                onClick={() =>
-                  setShowComplaintModal(true)
-                }
+                className="manage-action primary"
+                onClick={() => {
+                  setSubmitError("");
+                  setShowModal(true);
+                }}
               >
-                Lodge Complaint
+                Submit Complaint
               </button>
 
-            </section>
+              <Link
+                to="/track-complaint"
+                className="manage-action"
+              >
+                Track Complaint
+              </Link>
 
+              <Link
+                to="/feedback"
+                className="manage-action"
+              >
+                Anonymous Feedback
+              </Link>
 
-            {/* =========================================
-                STATISTICS
-            ========================================= */}
+            </div>
 
-            <section className="dashboard-stats">
+          </section>
 
-              <div className="stat-card">
+          {/* =================================================
+              FOOTER
+              ================================================= */}
 
-                <div className="stat-card-top">
+          <footer className="dashboard-footer">
 
-                  <span className="stat-label">
-                    Total Complaints
-                  </span>
+            <div className="dashboard-footer-top">
 
-                </div>
+              <div className="dashboard-footer-brand">
 
-                <strong className="stat-value">
-                  {totalComplaints}
-                </strong>
-
-                <span className="stat-description">
-                  Complaints submitted by you
-                </span>
-
-              </div>
-
-
-              <div className="stat-card">
-
-                <div className="stat-card-top">
-
-                  <span className="stat-label">
-                    Pending
-                  </span>
-
-                </div>
-
-                <strong className="stat-value">
-                  {pendingComplaints}
-                </strong>
-
-                <span className="stat-description">
-                  Awaiting action
-                </span>
-
-              </div>
-
-
-              <div className="stat-card">
-
-                <div className="stat-card-top">
-
-                  <span className="stat-label">
-                    In Progress
-                  </span>
-
-                </div>
-
-                <strong className="stat-value">
-                  {inProgressComplaints}
-                </strong>
-
-                <span className="stat-description">
-                  Currently being handled
-                </span>
-
-              </div>
-
-
-              <div className="stat-card">
-
-                <div className="stat-card-top">
-
-                  <span className="stat-label">
-                    Resolved
-                  </span>
-
-                </div>
-
-                <strong className="stat-value">
-                  {resolvedComplaints}
-                </strong>
-
-                <span className="stat-description">
-                  Successfully resolved
-                </span>
-
-              </div>
-
-            </section>
-
-
-            {/* =========================================
-                STUDENT STATUS
-            ========================================= */}
-
-            <section className="student-status-card">
-
-              <div className="student-status-main">
-
-                <div className="student-avatar">
-                  {studentInitial}
+                <div className="dashboard-footer-logo">
+                  C
                 </div>
 
                 <div>
 
-                  <span className="section-eyebrow">
-                    STUDENT STATUS
+                  <strong>
+                    CampusVoice
+                  </strong>
+
+                  <span>
+                    Complaint & Feedback
+                    Management System
                   </span>
-
-                  <h2>
-                    {displayName}
-                  </h2>
-
-                  <p>
-                    Active student account on CampusVoice.
-                  </p>
 
                 </div>
 
               </div>
 
+              <div className="dashboard-footer-links">
 
-              <span className="student-online-status">
-                Active
+                <Link to="/">
+                  Home
+                </Link>
+
+                <Link to="/student-dashboard">
+                  Dashboard
+                </Link>
+
+                <Link to="/track-complaint">
+                  Track Complaint
+                </Link>
+
+                <Link to="/feedback">
+                  Feedback
+                </Link>
+
+                <Link to="/profile">
+                  Profile
+                </Link>
+
+              </div>
+
+            </div>
+
+            <div className="dashboard-footer-bottom">
+
+              <span>
+                CampusVoice Student Portal
               </span>
 
-            </section>
+              <span>
+                © 2026 CampusVoice
+              </span>
 
+            </div>
 
-            {/* =========================================
-                MY COMPLAINTS
-            ========================================= */}
+          </footer>
 
-            <section className="dashboard-section">
-
-              <div className="section-heading">
-
-                <div>
-
-                  <span className="section-eyebrow">
-                    COMPLAINT MANAGEMENT
-                  </span>
-
-                  <h2>
-                    My Complaints
-                  </h2>
-
-                  <p>
-                    View and track the complaints
-                    submitted from your student account.
-                  </p>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() =>
-                    setShowComplaintModal(true)
-                  }
-                >
-                  New Complaint
-                </button>
-
-              </div>
-
-
-              {studentComplaints.length === 0 ? (
-
-                <div className="empty-state">
-
-                  <h3>
-                    No complaints yet
-                  </h3>
-
-                  <p>
-                    You have not submitted any complaints.
-                  </p>
-
-                  <button
-                    type="button"
-                    className="primary-button"
-                    onClick={() =>
-                      setShowComplaintModal(true)
-                    }
-                  >
-                    Lodge Your First Complaint
-                  </button>
-
-                </div>
-
-              ) : (
-
-                <div className="table-wrapper">
-
-                  <table className="complaints-table">
-
-                    <thead>
-
-                      <tr>
-
-                        <th>
-                          ID
-                        </th>
-
-                        <th>
-                          Complaint
-                        </th>
-
-                        <th>
-                          Category
-                        </th>
-
-                        <th>
-                          Date
-                        </th>
-
-                        <th>
-                          Priority
-                        </th>
-
-                        <th>
-                          Status
-                        </th>
-
-                        <th>
-                          Action
-                        </th>
-
-                      </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                      {studentComplaints.map(
-                        (complaint) => (
-
-                          <tr
-                            key={complaint.id}
-                          >
-
-                            <td>
-
-                              <strong className="complaint-id">
-                                {complaint.id}
-                              </strong>
-
-                            </td>
-
-
-                            <td>
-
-                              <div className="complaint-title-cell">
-
-                                <strong>
-                                  {complaint.title ||
-                                    complaint.subject ||
-                                    "Untitled Complaint"}
-                                </strong>
-
-                                {complaint.description && (
-                                  <span>
-                                    {complaint.description.length >
-                                    70
-                                      ? `${complaint.description.slice(
-                                          0,
-                                          70
-                                        )}...`
-                                      : complaint.description}
-                                  </span>
-                                )}
-
-                              </div>
-
-                            </td>
-
-
-                            <td>
-                              {complaint.category ||
-                                "General"}
-                            </td>
-
-
-                            <td>
-                              {complaint.date ||
-                                "—"}
-                            </td>
-
-
-                            <td>
-
-                              <span
-                                className={getPriorityClass(
-                                  complaint.priority
-                                )}
-                              >
-                                {complaint.priority ||
-                                  "Medium"}
-                              </span>
-
-                            </td>
-
-
-                            <td>
-
-                              <span
-                                className={getStatusClass(
-                                  complaint.status
-                                )}
-                              >
-                                {complaint.status ||
-                                  "Pending"}
-                              </span>
-
-                            </td>
-
-
-                            <td>
-
-                              <Link
-                                to={`/track-complaint?id=${complaint.id}`}
-                                className="track-link"
-                              >
-                                Track
-                              </Link>
-
-                            </td>
-
-                          </tr>
-
-                        )
-                      )}
-
-                    </tbody>
-
-                  </table>
-
-                </div>
-
-              )}
-
-            </section>
-
-
-            {/* =========================================
-                MY FEEDBACKS
-            ========================================= */}
-
-            <section className="dashboard-section">
-
-              <div className="section-heading">
-
-                <div>
-
-                  <span className="section-eyebrow">
-                    FEEDBACK
-                  </span>
-
-                  <h2>
-                    My Feedbacks
-                  </h2>
-
-                  <p>
-                    Review feedback submitted for your
-                    resolved complaints.
-                  </p>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={openFeedbackModal}
-                >
-                  Give Feedback
-                </button>
-
-              </div>
-
-
-              {studentFeedbacks.length === 0 ? (
-
-                <div className="empty-state">
-
-                  <h3>
-                    No feedback submitted
-                  </h3>
-
-                  <p>
-                    Feedback becomes available after
-                    a complaint is resolved.
-                  </p>
-
-                </div>
-
-              ) : (
-
-                <div className="feedback-grid">
-
-                  {studentFeedbacks.map(
-                    (feedback, index) => (
-
-                      <div
-                        className="feedback-card"
-                        key={
-                          feedback.id ||
-                          `${feedback.complaintId}-${index}`
-                        }
-                      >
-
-                        <div className="feedback-card-header">
-
-                          <div>
-
-                            <span className="feedback-complaint-id">
-                              {feedback.complaintId}
-                            </span>
-
-                            <h3>
-                              {feedback.category ||
-                                "General"}
-                            </h3>
-
-                          </div>
-
-
-                          <span className="feedback-rating">
-                            {feedback.rating}/5
-                          </span>
-
-                        </div>
-
-
-                        <p className="feedback-comment">
-                          {feedback.comment ||
-                            "No comment provided."}
-                        </p>
-
-
-                        <div className="feedback-card-footer">
-
-                          <span>
-                            {feedback.date ||
-                              "—"}
-                          </span>
-
-                          <span>
-                            Anonymous:{" "}
-                            {feedback.anonymous
-                              ? "Yes"
-                              : "No"}
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    )
-                  )}
-
-                </div>
-
-              )}
-
-            </section>
-
-
-            {/* =========================================
-                PROFILE PREVIEW
-            ========================================= */}
-
-            <section className="dashboard-section">
-
-              <div className="section-heading">
-
-                <div>
-
-                  <span className="section-eyebrow">
-                    ACCOUNT
-                  </span>
-
-                  <h2>
-                    Profile Preview
-                  </h2>
-
-                  <p>
-                    Information associated with your
-                    CampusVoice student account.
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              <div className="profile-preview">
-
-                <div className="profile-preview-avatar">
-                  {studentInitial}
-                </div>
-
-
-                <div className="profile-preview-details">
-
-                  <div>
-
-                    <span>
-                      Full Name
-                    </span>
-
-                    <strong>
-                      {displayName}
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      Student ID
-                    </span>
-
-                    <strong>
-                      {user?.studentId ||
-                        "Not available"}
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      Email
-                    </span>
-
-                    <strong>
-                      {user?.email ||
-                        "Not available"}
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      Role
-                    </span>
-
-                    <strong>
-                      Student
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </section>
-
-
-            {/* =========================================
-                QUICK ACTIONS
-            ========================================= */}
-
-            <section className="dashboard-section">
-
-              <div className="section-heading">
-
-                <div>
-
-                  <span className="section-eyebrow">
-                    QUICK ACCESS
-                  </span>
-
-                  <h2>
-                    Quick Actions
-                  </h2>
-
-                </div>
-
-              </div>
-
-
-              <div className="quick-actions">
-
-                <button
-                  type="button"
-                  className="quick-action-card"
-                  onClick={() =>
-                    setShowComplaintModal(true)
-                  }
-                >
-
-                  <strong>
-                    Lodge Complaint
-                  </strong>
-
-                  <span>
-                    Submit a new complaint
-                  </span>
-
-                </button>
-
-
-                <Link
-                  to="/track-complaint"
-                  className="quick-action-card"
-                >
-
-                  <strong>
-                    Track Complaint
-                  </strong>
-
-                  <span>
-                    Check complaint status
-                  </span>
-
-                </Link>
-
-
-                <button
-                  type="button"
-                  className="quick-action-card"
-                  onClick={openFeedbackModal}
-                >
-
-                  <strong>
-                    Give Feedback
-                  </strong>
-
-                  <span>
-                    Share your experience
-                  </span>
-
-                </button>
-
-
-                <Link
-                  to="/"
-                  className="quick-action-card"
-                >
-
-                  <strong>
-                    CampusVoice Home
-                  </strong>
-
-                  <span>
-                    Return to homepage
-                  </span>
-
-                </Link>
-
-              </div>
-
-            </section>
-
-          </main>
-
-
-          {/* FOOTER */}
-
-          <div className="dashboard-footer-wrapper">
-            <Footer />
-          </div>
-
-        </div>
+        </main>
 
       </div>
 
-
-      {/* =========================================
+      {/* =====================================================
           COMPLAINT MODAL
-      ========================================= */}
+          ===================================================== */}
 
-      {showComplaintModal && (
+      {showModal && (
 
         <div
           className="modal-overlay"
-          onClick={() =>
-            setShowComplaintModal(false)
-          }
+          onMouseDown={(event) => {
+
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setShowModal(false);
+            }
+
+          }}
         >
 
-          <div
-            className="dashboard-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
+          <div className="modal-body">
 
             <div className="modal-header">
 
               <div>
 
-                <span className="section-eyebrow">
-                  NEW SUBMISSION
+                <span className="modal-eyebrow">
+                  CAMPUSVOICE
                 </span>
 
                 <h2>
-                  Lodge Complaint
+                  Submit New Complaint
                 </h2>
 
-              </div>
+                <p>
+                  Provide the details of the
+                  issue you would like the
+                  institution to review.
+                </p>
 
+              </div>
 
               <button
                 type="button"
                 className="modal-close"
                 onClick={() =>
-                  setShowComplaintModal(false)
+                  setShowModal(false)
                 }
+                aria-label="Close"
               >
                 ×
               </button>
 
             </div>
 
+            {submitError && (
+              <div className="form-error">
+                {submitError}
+              </div>
+            )}
 
             <form
-              className="dashboard-form"
-              onSubmit={handleComplaintSubmit}
+              onSubmit={
+                handleSubmitComplaint
+              }
             >
 
               <div className="form-group">
 
-                <label htmlFor="title">
+                <label htmlFor="complaint-title">
                   Complaint Title
                 </label>
 
                 <input
-                  id="title"
+                  id="complaint-title"
                   name="title"
                   type="text"
-                  value={newComplaint.title}
-                  onChange={handleComplaintChange}
                   placeholder="Enter complaint title"
+                  value={
+                    newComplaint.title
+                  }
+                  onChange={
+                    handleComplaintChange
+                  }
+                  disabled={submitting}
+                  required
                 />
 
               </div>
-
 
               <div className="form-row">
 
                 <div className="form-group">
 
-                  <label htmlFor="category">
+                  <label htmlFor="complaint-category">
                     Category
                   </label>
 
                   <select
-                    id="category"
+                    id="complaint-category"
                     name="category"
-                    value={newComplaint.category}
-                    onChange={handleComplaintChange}
+                    value={
+                      newComplaint.category
+                    }
+                    onChange={
+                      handleComplaintChange
+                    }
+                    disabled={submitting}
                   >
 
-                    {availableCategories.map(
-                      (category) => (
-                        <option
-                          key={category}
-                          value={category}
-                        >
-                          {category}
-                        </option>
-                      )
-                    )}
+                    <option value="Infrastructure">
+                      Infrastructure
+                    </option>
+
+                    <option value="Academic">
+                      Academic
+                    </option>
+
+                    <option value="Hostel">
+                      Hostel
+                    </option>
+
+                    <option value="Library">
+                      Library
+                    </option>
+
+                    <option value="Canteen">
+                      Canteen
+                    </option>
+
+                    <option value="Transportation">
+                      Transportation
+                    </option>
+
+                    <option value="Technical">
+                      Technical
+                    </option>
+
+                    <option value="Faculty">
+                      Faculty
+                    </option>
+
+                    <option value="Administration">
+                      Administration
+                    </option>
+
+                    <option value="Other">
+                      Other
+                    </option>
 
                   </select>
 
                 </div>
 
-
                 <div className="form-group">
 
-                  <label htmlFor="priority">
+                  <label htmlFor="complaint-priority">
                     Priority
                   </label>
 
                   <select
-                    id="priority"
+                    id="complaint-priority"
                     name="priority"
-                    value={newComplaint.priority}
-                    onChange={handleComplaintChange}
+                    value={
+                      newComplaint.priority
+                    }
+                    onChange={
+                      handleComplaintChange
+                    }
+                    disabled={submitting}
                   >
 
                     <option value="Low">
@@ -1473,276 +1232,60 @@ const StudentDashboard = () => {
                       High
                     </option>
 
+                    <option value="Urgent">
+                      Urgent
+                    </option>
+
                   </select>
 
                 </div>
 
               </div>
 
-
               <div className="form-group">
 
-                <label htmlFor="description">
+                <label htmlFor="complaint-description">
                   Description
                 </label>
 
                 <textarea
-                  id="description"
+                  id="complaint-description"
                   name="description"
-                  rows="6"
-                  value={newComplaint.description}
-                  onChange={handleComplaintChange}
-                  placeholder="Describe your complaint in detail..."
+                  rows="5"
+                  placeholder="Describe the issue in detail..."
+                  value={
+                    newComplaint.description
+                  }
+                  onChange={
+                    handleComplaintChange
+                  }
+                  disabled={submitting}
+                  required
                 />
 
               </div>
-
 
               <div className="modal-actions">
 
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="btn-secondary"
                   onClick={() =>
-                    setShowComplaintModal(false)
+                    setShowModal(false)
                   }
+                  disabled={submitting}
                 >
                   Cancel
                 </button>
 
-
                 <button
                   type="submit"
-                  className="primary-button"
+                  className="btn-primary"
+                  disabled={submitting}
                 >
-                  Submit Complaint
-                </button>
-
-              </div>
-
-            </form>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* =========================================
-          FEEDBACK MODAL
-      ========================================= */}
-
-      {showFeedbackModal && (
-
-        <div
-          className="modal-overlay"
-          onClick={() =>
-            setShowFeedbackModal(false)
-          }
-        >
-
-          <div
-            className="dashboard-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-
-            <div className="modal-header">
-
-              <div>
-
-                <span className="section-eyebrow">
-                  FEEDBACK
-                </span>
-
-                <h2>
-                  Give Feedback
-                </h2>
-
-              </div>
-
-
-              <button
-                type="button"
-                className="modal-close"
-                onClick={() =>
-                  setShowFeedbackModal(false)
-                }
-              >
-                ×
-              </button>
-
-            </div>
-
-
-            <form
-              className="dashboard-form"
-              onSubmit={handleFeedbackSubmit}
-            >
-
-              <div className="form-group">
-
-                <label htmlFor="feedbackComplaint">
-                  Resolved Complaint
-                </label>
-
-                <select
-                  id="feedbackComplaint"
-                  value={feedbackComplaintId}
-                  onChange={(event) =>
-                    setFeedbackComplaintId(
-                      event.target.value
-                    )
-                  }
-                >
-
-                  {studentComplaints
-                    .filter(
-                      (complaint) =>
-                        (
-                          complaint.status ===
-                            "Resolved" ||
-                          complaint.status ===
-                            "Completed"
-                        ) &&
-                        !hasSubmittedFeedback(
-                          complaint.id
-                        )
-                    )
-                    .map((complaint) => (
-
-                      <option
-                        key={complaint.id}
-                        value={complaint.id}
-                      >
-                        {complaint.id} -{" "}
-                        {complaint.title ||
-                          complaint.subject ||
-                          "Complaint"}
-                      </option>
-
-                    ))}
-
-                </select>
-
-              </div>
-
-
-              <div className="form-group">
-
-                <label htmlFor="feedbackCategory">
-                  Category
-                </label>
-
-                <select
-                  id="feedbackCategory"
-                  value={feedbackCategory}
-                  onChange={(event) =>
-                    setFeedbackCategory(
-                      event.target.value
-                    )
-                  }
-                >
-
-                  <option value="General">
-                    General
-                  </option>
-
-                  {availableCategories.map(
-                    (category) => (
-
-                      <option
-                        key={category}
-                        value={category}
-                      >
-                        {category}
-                      </option>
-
-                    )
-                  )}
-
-                </select>
-
-              </div>
-
-
-              <div className="form-group">
-
-                <label>
-                  Rating
-                </label>
-
-                <div className="rating-selector">
-
-                  {[1, 2, 3, 4, 5].map(
-                    (rating) => (
-
-                      <button
-                        type="button"
-                        key={rating}
-                        className={
-                          feedbackRating === rating
-                            ? "rating-button selected"
-                            : "rating-button"
-                        }
-                        onClick={() =>
-                          setFeedbackRating(
-                            rating
-                          )
-                        }
-                      >
-                        {rating}
-                      </button>
-
-                    )
-                  )}
-
-                </div>
-
-              </div>
-
-
-              <div className="form-group">
-
-                <label htmlFor="feedbackComment">
-                  Feedback
-                </label>
-
-                <textarea
-                  id="feedbackComment"
-                  rows="6"
-                  value={feedbackComment}
-                  onChange={(event) =>
-                    setFeedbackComment(
-                      event.target.value
-                    )
-                  }
-                  placeholder="Share your experience..."
-                />
-
-              </div>
-
-
-              <div className="modal-actions">
-
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() =>
-                    setShowFeedbackModal(false)
-                  }
-                >
-                  Cancel
-                </button>
-
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                >
-                  Submit Feedback
+                  {submitting
+                    ? "Submitting..."
+                    : "Submit Complaint"}
                 </button>
 
               </div>
@@ -1757,6 +1300,6 @@ const StudentDashboard = () => {
 
     </>
   );
-};
+}
 
 export default StudentDashboard;

@@ -42,7 +42,7 @@ export const ComplaintProvider = ({ children }) => {
 
       const response = await api.get("/complaints?limit=100");
 
-      const list = response?.data?.complaints || [];
+      const list = response?.complaints || [];
 
       setComplaints(list);
 

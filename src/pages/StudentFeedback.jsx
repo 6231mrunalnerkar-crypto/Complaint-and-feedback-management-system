@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import Navbar from "../components/Navbar";
-import { saveFeedback, hasSubmittedFeedback } from "../utils/feedbackData";
-import { getStoredComplaints } from "../utils/mockData";
+import api from "../services/api";
 
 const StudentFeedback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const user = JSON.parse(localStorage.getItem("cfms_user") || "null");
+  const user = JSON.parse(
+    localStorage.getItem("cfms_user") || "null"
+  );
 
   const initialId = searchParams.get("id") || "";
 
@@ -19,12 +20,29 @@ const StudentFeedback = () => {
   const [category, setCategory] = useState("General");
   const [comment, setComment] = useState("");
 
-  const [verificationMessage, setVerificationMessage] = useState("");
-  const [verificationType, setVerificationType] = useState("");
+  const [verificationMessage, setVerificationMessage] =
+    useState("");
+  const [verificationType, setVerificationType] =
+    useState("");
   const [isVerified, setIsVerified] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleVerifyComplaint = () => {
-    const cleanId = complaintId.trim();
+  /*
+   * If complaint ID comes from the URL, automatically
+   * verify it when the page opens.
+   */
+  useEffect(() => {
+    if (initialId.trim()) {
+      verifyComplaint(initialId);
+    }
+  }, [initialId]);
+
+  /*
+   * VERIFY COMPLAINT USING BACKEND
+   */
+  const verifyComplaint = async (id = complaintId) => {
+    const cleanId = String(id || "").trim();
 
     if (!cleanId) {
       setIsVerified(false);
@@ -35,95 +53,142 @@ const StudentFeedback = () => {
       return;
     }
 
-    const complaints = getStoredComplaints();
+    try {
+      setIsVerifying(true);
+      setIsVerified(false);
+      setVerificationMessage("");
+      setVerificationType("");
 
-    const found = complaints.find(
-      (complaint) =>
-        complaint.id &&
-        complaint.id.toLowerCase() === cleanId.toLowerCase()
-    );
+      const response = await api.get(
+        `/feedback/verify/${encodeURIComponent(cleanId)}`
+      );
 
-    if (!found) {
+      const data = response?.data?.data;
+
+      if (!data?.complaint) {
+        setIsVerified(false);
+        setVerificationType("error");
+        setVerificationMessage(
+          "Complaint not found. Please check your Reference ID."
+        );
+        return;
+      }
+
+      if (data.alreadySubmitted) {
+        setIsVerified(false);
+        setVerificationType("warning");
+        setVerificationMessage(
+          "Feedback has already been submitted for this complaint."
+        );
+        return;
+      }
+
+      if (!data.eligible) {
+        setIsVerified(false);
+        setVerificationType("warning");
+        setVerificationMessage(
+          `Complaint found, but its current status is "${data.complaint.status}". Feedback is available only after the complaint is resolved.`
+        );
+        return;
+      }
+
+      setComplaintId(data.complaint.referenceId);
+      setIsVerified(true);
+      setVerificationType("success");
+      setVerificationMessage(
+        "Complaint verified. You can now submit your feedback."
+      );
+    } catch (error) {
+      console.error("Complaint verification error:", error);
+
       setIsVerified(false);
       setVerificationType("error");
-      setVerificationMessage(
-        "Complaint not found. Please check your Reference ID."
-      );
-      return;
-    }
 
-    if (found.status !== "Resolved") {
-      setIsVerified(false);
-      setVerificationType("warning");
       setVerificationMessage(
-        `Complaint found, but its current status is "${found.status}". Feedback is available only after the complaint is resolved.`
+        error?.response?.data?.message ||
+          "Unable to verify complaint. Please try again."
       );
-      return;
+    } finally {
+      setIsVerifying(false);
     }
-
-    if (hasSubmittedFeedback(found.id)) {
-      setIsVerified(false);
-      setVerificationType("warning");
-      setVerificationMessage(
-        "Feedback has already been submitted for this complaint."
-      );
-      return;
-    }
-
-    setIsVerified(true);
-    setVerificationType("success");
-    setVerificationMessage(
-      "Complaint verified. You can now submit your feedback."
-    );
   };
 
-  const handleSubmit = (e) => {
+  /*
+   * SUBMIT FEEDBACK TO BACKEND
+   */
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const cleanComplaintId = complaintId.trim().toUpperCase();
 
     if (!cleanComplaintId) {
-      toast.error("Please enter your Complaint Reference ID.");
+      toast.error(
+        "Please enter your Complaint Reference ID."
+      );
       return;
     }
 
     if (!isVerified) {
-      toast.error("Please verify your Complaint Reference ID first.");
+      toast.error(
+        "Please verify your Complaint Reference ID first."
+      );
       return;
     }
 
     if (!comment.trim()) {
-      toast.error("Please enter your feedback comments.");
+      toast.error(
+        "Please enter your feedback comments."
+      );
       return;
     }
 
-    const feedbackObj = {
-      complaintId: cleanComplaintId,
-      rating,
-      category,
-      comment: comment.trim(),
+    try {
+      setIsSubmitting(true);
 
-      // Student feedback is NOT anonymous
-      anonymous: false,
+      const response = await api.post("/feedback", {
+        complaintReferenceId: cleanComplaintId,
+        rating: Number(rating),
+        category,
+        comment: comment.trim(),
 
-      submittedBy:
-        user?.name ||
-        user?.fullName ||
-        "Student",
+        // Student feedback is NOT anonymous
+        anonymous: false,
+      });
 
-      studentId: user?.studentId || "",
-      email: user?.email || "",
+      if (!response?.data?.success) {
+        throw new Error(
+          response?.data?.message ||
+            "Feedback submission failed."
+        );
+      }
 
-      date: new Date().toISOString().split("T")[0],
-    };
+      toast.success(
+        "Your feedback has been submitted successfully."
+      );
 
-    saveFeedback(feedbackObj);
+      window.dispatchEvent(
+        new Event("cfms-feedback-updated")
+      );
 
-    toast.success("Your feedback has been submitted successfully.");
+      navigate(
+        `/track-complaint?id=${cleanComplaintId}`
+      );
+    } catch (error) {
+      console.error("Feedback submission error:", error);
 
-    navigate(`/track-complaint?id=${cleanComplaintId}`);
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to submit feedback."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  /*
+   * WHEN COMPLAINT ID CHANGES
+   */
   const handleComplaintIdChange = (e) => {
     setComplaintId(e.target.value);
 
@@ -202,17 +267,20 @@ const StudentFeedback = () => {
                 <input
                   id="complaintId"
                   type="text"
-                  placeholder="Example: CMP-1234"
+                  placeholder="Example: CMP-2026-ABC123"
                   value={complaintId}
                   onChange={handleComplaintIdChange}
                 />
 
                 <button
                   type="button"
-                  onClick={handleVerifyComplaint}
+                  onClick={() => verifyComplaint()}
                   className="verify-btn"
+                  disabled={isVerifying}
                 >
-                  Verify
+                  {isVerifying
+                    ? "Verifying..."
+                    : "Verify"}
                 </button>
 
               </div>
@@ -237,20 +305,24 @@ const StudentFeedback = () => {
 
               <div className="rating-options">
 
-                {[1, 2, 3, 4, 5].map((number) => (
-                  <button
-                    type="button"
-                    key={number}
-                    onClick={() => setRating(number)}
-                    className={
-                      number === rating
-                        ? "rating-btn active"
-                        : "rating-btn"
-                    }
-                  >
-                    {number}
-                  </button>
-                ))}
+                {[1, 2, 3, 4, 5].map(
+                  (number) => (
+                    <button
+                      type="button"
+                      key={number}
+                      onClick={() =>
+                        setRating(number)
+                      }
+                      className={
+                        number === rating
+                          ? "rating-btn active"
+                          : "rating-btn"
+                      }
+                    >
+                      {number}
+                    </button>
+                  )
+                )}
 
               </div>
 
@@ -298,6 +370,7 @@ const StudentFeedback = () => {
                 <option value="Infrastructure">
                   Infrastructure
                 </option>
+
               </select>
 
             </div>
@@ -341,14 +414,18 @@ const StudentFeedback = () => {
 
             <button
               type="submit"
-              disabled={!isVerified}
+              disabled={
+                !isVerified || isSubmitting
+              }
               className={
-                isVerified
+                isVerified && !isSubmitting
                   ? "submit-feedback-btn"
                   : "submit-feedback-btn disabled"
               }
             >
-              Submit Feedback
+              {isSubmitting
+                ? "Submitting..."
+                : "Submit Feedback"}
             </button>
 
           </form>
@@ -357,7 +434,9 @@ const StudentFeedback = () => {
 
           <button
             type="button"
-            onClick={() => navigate("/student-dashboard")}
+            onClick={() =>
+              navigate("/student-dashboard")
+            }
             className="back-dashboard-btn"
           >
             Back to Dashboard
@@ -508,8 +587,13 @@ const StudentFeedback = () => {
           cursor: pointer;
         }
 
-        .verify-btn:hover {
+        .verify-btn:hover:not(:disabled) {
           background: #34d399;
+        }
+
+        .verify-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .verification-message {

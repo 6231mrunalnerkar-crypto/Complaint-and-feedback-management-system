@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import api from "../services/api";
 
 import {
   getStoredComplaints,
@@ -57,6 +58,7 @@ const getComplaintTitle = (complaint) =>
   "Untitled Complaint";
 
 const getComplaintId = (complaint) =>
+  complaint?.referenceId ||
   complaint?.id ||
   complaint?.complaintId ||
   "—";
@@ -286,10 +288,11 @@ const OverviewSection = ({
   const totalComplaints = complaints.length;
 
   const pending = complaints.filter(
-    (item) =>
-      String(item?.status || "").toLowerCase() === "pending"
-  ).length;
-
+  (item) => {
+    const status = String(item?.status || "").toLowerCase();
+    return status === "pending" || status === "submitted";
+  }
+).length;
   const inProgress = complaints.filter(
     (item) =>
       String(item?.status || "").toLowerCase() ===
@@ -1096,11 +1099,14 @@ const ComplaintsSection = ({
                   </span>
 
                   <span>
-                    Submitted by:{" "}
-                    {complaint?.anonymous
-                      ? "Anonymous User"
-                      : complaint?.submittedBy ||
-                        "Registered User"}
+                   Submitted by:{" "}
+{complaint?.anonymous
+  ? "Anonymous User"
+  : typeof complaint?.submittedBy === "object"
+    ? complaint?.submittedBy?.name ||
+      complaint?.submittedBy?.email ||
+      "Registered User"
+    : complaint?.submittedBy || "Registered User"}
                   </span>
                 </div>
               </div>
@@ -1678,12 +1684,15 @@ const ComplaintModal = ({
 
           <div>
             <span>Submitted By</span>
-            <strong>
-              {complaint?.anonymous
-                ? "Anonymous User"
-                : complaint?.submittedBy ||
-                  "Registered User"}
-            </strong>
+           <strong>
+  {complaint?.anonymous
+    ? "Anonymous User"
+    : typeof complaint?.submittedBy === "object"
+      ? complaint?.submittedBy?.name ||
+        complaint?.submittedBy?.email ||
+        "Registered User"
+      : complaint?.submittedBy || "Registered User"}
+</strong>
           </div>
 
           <div>
@@ -2176,21 +2185,32 @@ const AddCategoryModal = ({
 const AdminDashboard = () => {
   const navigate = useNavigate();
 
-  const [complaints, setComplaints] = useState(() =>
-    getStoredComplaints()
-  );
-
+  const [complaints, setComplaints] = useState([]);
   const [feedbackList, setFeedbackList] = useState(() =>
     getStoredFeedback()
   );
 
   const [categories, setCategories] = useState(() =>
-    getStoredCategories()
-  );
+  getStoredCategories()
+);
 
-  const [activeSection, setActiveSection] =
-    useState("overview");
+const loadComplaints = async () => {
+  try {
+    const response = await api.get("/complaints");
 
+    setComplaints(response.complaints || []);
+  } catch (error) {
+    console.error("Failed to load complaints:", error);
+    toast.error(error.message || "Failed to load complaints");
+  }
+};
+
+useEffect(() => {
+  loadComplaints();
+}, []);
+
+const [activeSection, setActiveSection] =
+  useState("overview");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] =
     useState("All");
@@ -2223,14 +2243,14 @@ const AdminDashboard = () => {
   const [newCategoryName, setNewCategoryName] =
     useState("");
 
-  const refreshData = () => {
-    setComplaints(getStoredComplaints());
-    setFeedbackList(getStoredFeedback());
-    setCategories(getStoredCategories());
+ const refreshData = async () => {
+  await loadComplaints();
 
-    toast.success("Dashboard data refreshed");
-  };
+  setFeedbackList(getStoredFeedback());
+  setCategories(getStoredCategories());
 
+  toast.success("Dashboard data refreshed");
+};
   const handleLogout = () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("cfms_user");
@@ -2240,13 +2260,25 @@ const AdminDashboard = () => {
     navigate("/");
   };
 
-  const handleStatusChange = (
-    complaint,
-    newStatus
-  ) => {
-    const id = getComplaintId(complaint);
+ const handleStatusChange = async (
+  complaint,
+  newStatus
+) => {
+  try {
+    const response = await api.patch(
+      `/complaints/${complaint._id}/status`,
+      {
+        status: newStatus,
+      }
+    );
 
-    updateComplaintStatus(id, newStatus);
+    if (!response.success) {
+      throw new Error(
+        response.message || "Failed to update complaint status"
+      );
+    }
+
+    const id = getComplaintId(complaint);
 
     const updatedComplaints = complaints.map((item) =>
       getComplaintId(item) === id
@@ -2274,8 +2306,17 @@ const AdminDashboard = () => {
     );
 
     toast.success("Complaint status updated");
-  };
+  } catch (error) {
+    console.error(
+      "Complaint status update error:",
+      error
+    );
 
+    toast.error(
+      error.message || "Failed to update complaint status"
+    );
+  }
+};
   const handleDeleteComplaint = (complaint) => {
     const id = getComplaintId(complaint);
 

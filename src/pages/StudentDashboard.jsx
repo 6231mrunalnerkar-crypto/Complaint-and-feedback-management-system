@@ -614,278 +614,240 @@ function StudentDashboard() {
 
           </div>
 
-          {/* =================================================
-              MY COMPLAINTS
-              ================================================= */}
+         {/* =================================================
+    MY COMPLAINTS
+    ================================================= */}
 
-          <section
-            className="dashboard-section"
-            id="my-complaints"
-          >
+<section
+  className="dashboard-section"
+  id="my-complaints"
+>
+  <div className="section-heading-row">
 
-            <div className="section-heading-row">
+    <div>
+      <span className="section-eyebrow">
+        COMPLAINT MANAGEMENT
+      </span>
 
-              <div>
+      <h2>
+        My Complaints
+      </h2>
 
-                <span className="section-eyebrow">
-                  COMPLAINT MANAGEMENT
-                </span>
+      <p>
+        View and track the complaints you have
+        submitted.
+      </p>
+    </div>
 
-                <h2>
-                  My Complaints
-                </h2>
+    <Link
+      to="/track-complaint"
+      className="section-link"
+    >
+      Track Complaint
+    </Link>
 
-                <p>
-                  View and track the complaints
-                  you have submitted.
-                </p>
+  </div>
 
-              </div>
+  {sortedComplaints.length === 0 ? (
 
-              <Link
-                to="/track-complaint"
-                className="section-link"
-              >
-                Track Complaint
-              </Link>
+    <div className="empty-state">
 
-            </div>
+      <h3>
+        No complaints yet
+      </h3>
 
-            {sortedComplaints.length ===
-            0 ? (
+      <p>
+        You have not submitted any complaints.
+      </p>
 
-              <div className="empty-state">
+      <button
+        type="button"
+        className="empty-state-btn"
+        onClick={() => {
+          setSubmitError("");
+          setShowModal(true);
+        }}
+      >
+        Submit Your First Complaint
+      </button>
 
-                <h3>
-                  No complaints yet
-                </h3>
+    </div>
 
-                <p>
-                  You have not submitted any
-                  complaints.
-                </p>
+  ) : (
 
-                <button
-                  type="button"
-                  className="empty-state-btn"
-                  onClick={() => {
-                    setSubmitError("");
-                    setShowModal(true);
-                  }}
+    <div className="table-container">
+
+      <table className="custom-table">
+
+        <thead>
+          <tr>
+
+            <th>
+              Complaint ID
+            </th>
+
+            <th>
+              Complaint
+            </th>
+
+            <th>
+              Category
+            </th>
+
+            <th>
+              Date
+            </th>
+
+            <th>
+              Priority
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Action
+            </th>
+
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {sortedComplaints.map(
+            (complaint) => {
+
+              const complaintId =
+                getComplaintId(complaint);
+
+              const status =
+                String(
+                  complaint.status || ""
+                ).toLowerCase();
+
+              const isResolved =
+                status === "resolved";
+
+              return (
+                <tr
+                  key={
+                    complaint._id ||
+                    complaint.id ||
+                    complaint.referenceId
+                  }
                 >
-                  Submit Your First Complaint
-                </button>
 
-              </div>
+                  <td>
+                    <strong>
+                      {complaintId}
+                    </strong>
+                  </td>
 
-            ) : (
+                  <td>
 
-              <div className="table-container">
+                    <div className="complaint-title-cell">
 
-                <table className="custom-table">
+                      <span>
+                        {getComplaintTitle(
+                          complaint
+                        )}
+                      </span>
 
-                  <thead>
+                      {complaint.description && (
+                        <small>
+                          {complaint.description.length > 65
+                            ? `${complaint.description.slice(
+                                0,
+                                65
+                              )}...`
+                            : complaint.description}
+                        </small>
+                      )}
 
-                    <tr>
+                    </div>
 
-                      <th>
-                        Complaint ID
-                      </th>
+                  </td>
 
-                      <th>
-                        Complaint
-                      </th>
+                  <td>
 
-                      <th>
-                        Category
-                      </th>
+                    <span className="category-badge">
+                      {complaint.category ||
+                        "Other"}
+                    </span>
 
-                      <th>
-                        Date
-                      </th>
+                  </td>
 
-                      <th>
-                        Priority
-                      </th>
+                  <td>
+                    {formatDate(
+                      complaint.createdAt ||
+                      complaint.date
+                    )}
+                  </td>
 
-                      <th>
-                        Status
-                      </th>
+                  <td>
 
-                    </tr>
+                    <span
+                      className={`badge ${getPriorityClass(
+                        complaint.priority
+                      )}`}
+                    >
+                      {complaint.priority ||
+                        "Medium"}
+                    </span>
 
-                  </thead>
+                  </td>
 
-                  <tbody>
+                  <td>
 
-                    {sortedComplaints.map(
-                      (complaint) => (
+                    <span
+                      className={`badge ${getStatusClass(
+                        complaint.status
+                      )}`}
+                    >
+                      {complaint.status ||
+                        "Submitted"}
+                    </span>
 
-                        <tr
-                          key={
-                            complaint._id ||
-                            complaint.id ||
-                            complaint.referenceId
-                          }
-                        >
+                  </td>
 
-                          <td>
+                  <td>
 
-                            <strong>
-                              {getComplaintId(
-                                complaint
-                              )}
-                            </strong>
+                    {isResolved ? (
 
-                          </td>
+                      <Link
+                        to={`/feedback?id=${encodeURIComponent(
+                          complaintId
+                        )}`}
+                        className="feedback-action-btn"
+                      >
+                        Give Feedback
+                      </Link>
 
-                          <td>
+                    ) : (
 
-                            <div className="complaint-title-cell">
+                      <span className="action-disabled">
+                        —
+                      </span>
 
-                              <span>
-                                {getComplaintTitle(
-                                  complaint
-                                )}
-                              </span>
-
-                              {complaint.description && (
-                                <small>
-                                  {complaint
-                                    .description
-                                    .length >
-                                  65
-                                    ? `${complaint.description.slice(
-                                        0,
-                                        65
-                                      )}...`
-                                    : complaint.description}
-                                </small>
-                              )}
-
-                            </div>
-
-                          </td>
-
-                          <td>
-
-                            <span className="category-badge">
-                              {complaint.category ||
-                                "Other"}
-                            </span>
-
-                          </td>
-
-                          <td>
-
-                            {formatDate(
-                              complaint.createdAt ||
-                              complaint.date
-                            )}
-
-                          </td>
-
-                          <td>
-
-                            <span
-                              className={`badge ${getPriorityClass(
-                                complaint.priority
-                              )}`}
-                            >
-                              {complaint.priority ||
-                                "Medium"}
-                            </span>
-
-                          </td>
-
-                          <td>
-
-                            <span
-                              className={`badge ${getStatusClass(
-                                complaint.status
-                              )}`}
-                            >
-                              {complaint.status ||
-                                "Submitted"}
-                            </span>
-
-                          </td>
-
-                        </tr>
-
-                      )
                     )}
 
-                  </tbody>
+                  </td>
 
-                </table>
+                </tr>
+              );
+            }
+          )}
 
-              </div>
+        </tbody>
 
-            )}
+      </table>
 
-          </section>
+    </div>
 
-          {/* =================================================
-              MY FEEDBACKS
-              ================================================= */}
+  )}
 
-          <section
-            className="dashboard-section"
-            id="my-feedbacks"
-          >
-
-            <div className="section-heading-row">
-
-              <div>
-
-                <span className="section-eyebrow">
-                  FEEDBACK MANAGEMENT
-                </span>
-
-                <h2>
-                  My Feedbacks
-                </h2>
-
-                <p>
-                  Review the feedback you have
-                  submitted through CampusVoice.
-                </p>
-
-              </div>
-
-              <Link
-                to="/feedback"
-                className="section-link"
-              >
-                Give Feedback
-              </Link>
-
-            </div>
-
-            <div className="empty-state">
-
-              <h3>
-                Feedback integration
-              </h3>
-
-              <p>
-                Your feedback section will
-                display submitted feedback
-                after the feedback API is
-                connected.
-              </p>
-
-              <Link
-                to="/feedback"
-                className="empty-state-btn"
-              >
-                Submit Feedback
-              </Link>
-
-            </div>
-
-          </section>
+</section>
 
           {/* =================================================
               PROFILE PREVIEW

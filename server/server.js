@@ -9,6 +9,7 @@ const cors = require("cors");
 const path = require("path");
 
 const connectDB = require("./config/db");
+
 const {
   notFound,
   errorHandler,
@@ -27,11 +28,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL
-      ? process.env.CLIENT_URL
-          .split(",")
-          .map((item) => item.trim())
-      : true,
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -40,7 +37,12 @@ app.use(
    BODY PARSERS
 ====================================================== */
 
-app.use(express.json({ limit: "2mb" }));
+app.use(
+  express.json({
+    limit: "2mb",
+  })
+);
+
 app.use(
   express.urlencoded({
     extended: true,
@@ -49,13 +51,14 @@ app.use(
 );
 
 /* ======================================================
-   BACKEND HOME / STATUS
+   BACKEND HOME
 ====================================================== */
 
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "CampusVoice backend is running successfully.",
+    message:
+      "CampusVoice backend is running successfully.",
   });
 });
 
@@ -77,20 +80,34 @@ app.get("/api/health", (req, res) => {
 
 app.use(
   "/uploads",
-  express.static(path.join(__dirname, "uploads"))
+  express.static(
+    path.join(__dirname, "uploads")
+  )
 );
 
 /* ======================================================
    API ROUTES
 ====================================================== */
 
-app.use("/api/auth", authRoutes);
+app.use(
+  "/api/auth",
+  authRoutes
+);
 
-app.use("/api/complaints", complaintRoutes);
+app.use(
+  "/api/complaints",
+  complaintRoutes
+);
 
-app.use("/api/feedback", feedbackRoutes);
+app.use(
+  "/api/feedback",
+  feedbackRoutes
+);
 
-app.use("/api/users", userRoutes);
+app.use(
+  "/api/users",
+  userRoutes
+);
 
 /* ======================================================
    ERROR HANDLING
@@ -104,7 +121,8 @@ app.use(errorHandler);
    SERVER
 ====================================================== */
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT =
+  Number(process.env.PORT) || 5000;
 
 async function startServer() {
   try {

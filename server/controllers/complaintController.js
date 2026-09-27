@@ -154,12 +154,23 @@ async function listComplaints(req, res) {
 
     let filter = {};
 
-    // Student can see only their complaints
+    // STUDENT:
+    // Only show complaints submitted by the logged-in student
     if (user && user.role === "student") {
       filter.submittedBy = user._id;
     }
 
+    // STAFF:
+    // Only show complaints assigned to the logged-in staff member
+    if (user && user.role === "staff") {
+      filter.assignedStaff = user._id;
+    }
+
+    // ADMIN:
+    // No filter -> admin can see all complaints
+
     const complaints = await Complaint.find(filter)
+      .populate("assignedStaff", "_id name email")
       .sort({ createdAt: -1 })
       .lean();
 

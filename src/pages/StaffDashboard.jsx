@@ -1,13 +1,71 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+
 import "../styles/StaffDashboard.css";
 
-import {
-  getStoredComplaints,
-  saveComplaint,
-} from "../utils/mockData";
+/* =========================================================
+   API CONFIG
+========================================================= */
+
+const API_BASE_URL = "http://localhost:5000/api";
+
+/* =========================================================
+   AUTH TOKEN
+========================================================= */
+
+function getToken() {
+  return (
+    localStorage.getItem("cfms_token") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    ""
+  );
+}
+
+/* =========================================================
+   API REQUEST
+========================================================= */
+
+async function apiRequest(endpoint, options = {}) {
+  const token = getToken();
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}${endpoint}`,
+    {
+      ...options,
+      headers,
+    }
+  );
+
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        `Request failed with status ${response.status}`
+    );
+  }
+
+  return data;
+}
 
 /* =========================================================
    COMPLAINT CARD
@@ -25,6 +83,12 @@ function ComplaintCard({
     complaint.subject ||
     "Untitled Complaint";
 
+  const complaintId =
+    complaint.referenceId ||
+    complaint.id ||
+    complaint._id ||
+    "CMP-0000";
+
   return (
     <article className="staff-complaint-card">
       <div className="staff-complaint-main">
@@ -32,8 +96,9 @@ function ComplaintCard({
         <div className="staff-complaint-indicator" />
 
         <div className="staff-complaint-info">
+
           <span className="staff-complaint-id">
-            {complaint.id || "CMP-0000"}
+            {complaintId}
           </span>
 
           <h3>{title}</h3>
@@ -41,10 +106,14 @@ function ComplaintCard({
           <p>
             {complaint.description
               ? complaint.description.length > 90
-                ? `${complaint.description.slice(0, 90)}...`
+                ? `${complaint.description.slice(
+                    0,
+                    90
+                  )}...`
                 : complaint.description
               : "No description provided."}
           </p>
+
         </div>
 
         <span className="staff-category-badge">
@@ -60,9 +129,11 @@ function ComplaintCard({
         </span>
 
         <div className="staff-assigned-date">
+
           <strong>
             {formatDate(
-              complaint.assignedDate || complaint.date
+              complaint.assignedDate ||
+                complaint.createdAt
             )}
           </strong>
 
@@ -70,6 +141,7 @@ function ComplaintCard({
             Assigned by{" "}
             {complaint.assignedBy || "Admin"}
           </span>
+
         </div>
 
         <span
@@ -77,7 +149,7 @@ function ComplaintCard({
             complaint.status
           )}`}
         >
-          {complaint.status || "Pending"}
+          {complaint.status || "Submitted"}
         </span>
 
         <button
@@ -92,7 +164,6 @@ function ComplaintCard({
     </article>
   );
 }
-
 
 /* =========================================================
    PRIORITY SECTION
@@ -123,9 +194,11 @@ function PrioritySection({
           </span>
 
           <div>
+
             <h3>{title}</h3>
 
             <p>{description}</p>
+
           </div>
 
         </div>
@@ -137,30 +210,38 @@ function PrioritySection({
       </div>
 
       {items.length === 0 ? (
+
         <div className="priority-empty">
           No {title.toLowerCase()} complaints assigned.
         </div>
+
       ) : (
+
         <div className="priority-complaints">
 
           {items.map((complaint) => (
+
             <ComplaintCard
-              key={complaint.id}
+              key={
+                complaint._id ||
+                complaint.referenceId
+              }
               complaint={complaint}
               onOpen={onOpen}
               getStatusClass={getStatusClass}
               getPriorityClass={getPriorityClass}
               formatDate={formatDate}
             />
+
           ))}
 
         </div>
+
       )}
 
     </section>
   );
 }
-
 
 /* =========================================================
    STAFF DASHBOARD
@@ -168,12 +249,14 @@ function PrioritySection({
 
 function StaffDashboard() {
 
-  const [complaints, setComplaints] = useState([]);
+  const [complaints, setComplaints] =
+    useState([]);
 
   const [selectedComplaint, setSelectedComplaint] =
     useState(null);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
   const [statusFilter, setStatusFilter] =
     useState("All");
@@ -181,16 +264,14 @@ function StaffDashboard() {
   const [resolutionNote, setResolutionNote] =
     useState("");
 
-  const [proofImage, setProofImage] =
+  const [loading, setLoading] =
+    useState(true);
+
+  const [actionLoading, setActionLoading] =
+    useState(false);
+
+  const [error, setError] =
     useState("");
-
-  const [proofName, setProofName] =
-    useState("");
-
-
-  /* =======================================================
-     STAFF INFORMATION
-  ======================================================= */
 
   const [staff] = useState(() => {
 
@@ -213,6 +294,7 @@ function StaffDashboard() {
       return {
         name:
           parsed?.name ||
+          parsed?.fullName ||
           `${parsed?.firstName || ""} ${
             parsed?.lastName || ""
           }`.trim() ||
@@ -223,16 +305,17 @@ function StaffDashboard() {
           "Staff",
 
         id:
+          parsed?._id ||
           parsed?.id ||
           parsed?.userId ||
           "",
       };
 
-    } catch (error) {
+    } catch (err) {
 
       console.error(
         "Unable to load staff information:",
-        error
+        err
       );
 
       return {
@@ -244,142 +327,90 @@ function StaffDashboard() {
 
   });
 
+  /* =======================================================
+     LOAD COMPLAINTS FROM BACKEND
+  ======================================================= */
+
+  const loadComplaints = async () => {
+
+    try {
+
+      setLoading(true);
+      setError("");
+
+      const data =
+        await apiRequest("/complaints");
+
+      const loadedComplaints =
+        Array.isArray(data.complaints)
+          ? data.complaints
+          : [];
+
+      setComplaints(
+        loadedComplaints
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Unable to load staff complaints:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Unable to load complaints."
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
 
   /* =======================================================
-     LOAD COMPLAINTS
+     INITIAL LOAD
   ======================================================= */
 
   useEffect(() => {
 
-    const loadData = () => {
+    loadComplaints();
 
-      try {
-
-        const data =
-          getStoredComplaints();
-
-        setComplaints(
-          Array.isArray(data)
-            ? data
-            : []
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Unable to load complaints:",
-          error
-        );
-
-        setComplaints([]);
-
-      }
-
-    };
-
-    loadData();
-
-    const handleStorageChange = () => {
-      loadData();
-    };
-
-    window.addEventListener(
-      "storage",
-      handleStorageChange
-    );
+    const handleComplaintUpdate =
+      () => {
+        loadComplaints();
+      };
 
     window.addEventListener(
       "cfms-complaints-updated",
-      handleStorageChange
+      handleComplaintUpdate
     );
 
     return () => {
 
       window.removeEventListener(
-        "storage",
-        handleStorageChange
-      );
-
-      window.removeEventListener(
         "cfms-complaints-updated",
-        handleStorageChange
+        handleComplaintUpdate
       );
 
     };
 
   }, []);
 
-
   /* =======================================================
-     CHECK STAFF ASSIGNMENT
-  ======================================================= */
-
-  const isAssignedToStaff = (complaint) => {
-
-    const assignedName =
-      String(
-        complaint.assignedTo ||
-        complaint.assignedStaff ||
-        complaint.staffName ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
-
-    const assignedId =
-      String(
-        complaint.assignedStaffId ||
-        complaint.staffId ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
-
-    const currentName =
-      String(staff.name || "")
-        .trim()
-        .toLowerCase();
-
-    const currentId =
-      String(staff.id || "")
-        .trim()
-        .toLowerCase();
-
-    return (
-      (assignedName &&
-        assignedName === currentName) ||
-      (assignedId &&
-        currentId &&
-        assignedId === currentId)
-    );
-  };
-
-
-  /* =======================================================
-     ASSIGNED COMPLAINTS
-  ======================================================= */
-
-  const assignedComplaints =
-    useMemo(() => {
-
-      return complaints.filter(
-        isAssignedToStaff
-      );
-
-    }, [complaints, staff]);
-
-
-  /* =======================================================
-     SEARCH + STATUS FILTER
+     FILTER COMPLAINTS
   ======================================================= */
 
   const filteredComplaints =
     useMemo(() => {
 
       const cleanSearch =
-        search.trim().toLowerCase();
+        search
+          .trim()
+          .toLowerCase();
 
-      return assignedComplaints.filter(
+      return complaints.filter(
         (complaint) => {
 
           const title =
@@ -387,24 +418,32 @@ function StaffDashboard() {
             complaint.subject ||
             "";
 
+          const referenceId =
+            complaint.referenceId ||
+            complaint.id ||
+            complaint._id ||
+            "";
+
+          const category =
+            complaint.category ||
+            "";
+
           const matchesSearch =
             !cleanSearch ||
-            String(complaint.id || "")
+            String(referenceId)
               .toLowerCase()
               .includes(cleanSearch) ||
             String(title)
               .toLowerCase()
               .includes(cleanSearch) ||
-            String(
-              complaint.category || ""
-            )
+            String(category)
               .toLowerCase()
               .includes(cleanSearch);
 
           const complaintStatus =
             String(
               complaint.status ||
-              "Pending"
+                "Submitted"
             ).toLowerCase();
 
           const matchesStatus =
@@ -420,14 +459,13 @@ function StaffDashboard() {
       );
 
     }, [
-      assignedComplaints,
+      complaints,
       search,
       statusFilter,
     ]);
 
-
   /* =======================================================
-     PRIORITY CATEGORIES
+     PRIORITY GROUPS
   ======================================================= */
 
   const highPriority =
@@ -435,8 +473,9 @@ function StaffDashboard() {
       (complaint) =>
         String(
           complaint.priority ||
-          "Medium"
-        ).toLowerCase() === "high"
+            "Medium"
+        ).toLowerCase() ===
+        "high"
     );
 
   const mediumPriority =
@@ -444,8 +483,9 @@ function StaffDashboard() {
       (complaint) =>
         String(
           complaint.priority ||
-          "Medium"
-        ).toLowerCase() === "medium"
+            "Medium"
+        ).toLowerCase() ===
+        "medium"
     );
 
   const lowPriority =
@@ -453,61 +493,71 @@ function StaffDashboard() {
       (complaint) =>
         String(
           complaint.priority ||
-          "Medium"
-        ).toLowerCase() === "low"
+            "Medium"
+        ).toLowerCase() ===
+        "low"
     );
 
-
   /* =======================================================
-     DASHBOARD COUNTS
+     COUNTS
   ======================================================= */
 
   const pendingCount =
-    assignedComplaints.filter(
-      (complaint) =>
-        String(
-          complaint.status ||
-          "Pending"
-        ).toLowerCase() === "pending"
-    ).length;
-
-
-  const progressCount =
-    assignedComplaints.filter(
-      (complaint) =>
-        String(
-          complaint.status || ""
-        ).toLowerCase() ===
-        "in progress"
-    ).length;
-
-
-  const completedCount =
-    assignedComplaints.filter(
+    complaints.filter(
       (complaint) => {
 
         const status =
           String(
-            complaint.status || ""
+            complaint.status ||
+              "Submitted"
+          ).toLowerCase();
+
+        return (
+          status === "submitted" ||
+          status === "under review" ||
+          status === "pending"
+        );
+      }
+    ).length;
+
+  const progressCount =
+    complaints.filter(
+      (complaint) =>
+        String(
+          complaint.status ||
+            ""
+        ).toLowerCase() ===
+        "in progress"
+    ).length;
+
+  const completedCount =
+    complaints.filter(
+      (complaint) => {
+
+        const status =
+          String(
+            complaint.status ||
+              ""
           ).toLowerCase();
 
         return (
           status === "completed" ||
-          status === "resolved"
+          status === "resolved" ||
+          status === "closed"
         );
 
       }
     ).length;
 
-
   const highPriorityCount =
-    assignedComplaints.filter(
+    complaints.filter(
       (complaint) =>
         String(
-          complaint.priority || ""
-        ).toLowerCase() === "high"
+          complaint.priority ||
+            ""
+        ).toLowerCase() ===
+        "high"
     ).length;
-
 
   /* =======================================================
      DATE FORMAT
@@ -515,7 +565,9 @@ function StaffDashboard() {
 
   const formatDate = (date) => {
 
-    if (!date) return "—";
+    if (!date) {
+      return "—";
+    }
 
     const parsedDate =
       new Date(date);
@@ -538,10 +590,11 @@ function StaffDashboard() {
     );
   };
 
-
   const formatDateTime = (date) => {
 
-    if (!date) return "—";
+    if (!date) {
+      return "—";
+    }
 
     const parsedDate =
       new Date(date);
@@ -566,7 +619,6 @@ function StaffDashboard() {
     );
   };
 
-
   /* =======================================================
      STATUS CLASS
   ======================================================= */
@@ -574,14 +626,19 @@ function StaffDashboard() {
   const getStatusClass = (status) => {
 
     return String(
-      status || "Pending"
+      status || "Submitted"
     )
       .toLowerCase()
       .replace(/\s+/g, "-");
   };
 
+  /* =======================================================
+     PRIORITY CLASS
+  ======================================================= */
 
-  const getPriorityClass = (priority) => {
+  const getPriorityClass = (
+    priority
+  ) => {
 
     return String(
       priority || "Medium"
@@ -590,33 +647,28 @@ function StaffDashboard() {
       .replace(/\s+/g, "-");
   };
 
-
   /* =======================================================
      OPEN COMPLAINT
   ======================================================= */
 
-  const openComplaint = (complaint) => {
+  const openComplaint = (
+    complaint
+  ) => {
 
     setSelectedComplaint(
       complaint
     );
 
     setResolutionNote(
-      complaint.resolutionNote ||
-      ""
+      complaint
+        ?.resolutionDetails
+        ?.resolutionSummary ||
+        complaint?.resolutionNote ||
+        ""
     );
 
-    setProofImage(
-      complaint.proofImage ||
-      ""
-    );
-
-    setProofName(
-      complaint.proofImageName ||
-      ""
-    );
+    setError("");
   };
-
 
   /* =======================================================
      CLOSE COMPLAINT
@@ -624,21 +676,26 @@ function StaffDashboard() {
 
   const closeComplaint = () => {
 
-    setSelectedComplaint(null);
+    if (actionLoading) {
+      return;
+    }
 
-    setResolutionNote("");
+    setSelectedComplaint(
+      null
+    );
 
-    setProofImage("");
+    setResolutionNote(
+      ""
+    );
 
-    setProofName("");
+    setError("");
   };
-
 
   /* =======================================================
      UPDATE STATUS
   ======================================================= */
 
-  const updateStatus = (
+  const updateStatus = async (
     newStatus
   ) => {
 
@@ -646,42 +703,54 @@ function StaffDashboard() {
       return;
     }
 
-    const updatedComplaint = {
-
-      ...selectedComplaint,
-
-      status: newStatus,
-
-      staffStatus: newStatus,
-
-      lastUpdatedBy:
-        staff.name,
-
-      lastUpdatedAt:
-        new Date().toISOString(),
-
-    };
-
+    if (
+      newStatus ===
+      selectedComplaint.status
+    ) {
+      return;
+    }
 
     try {
 
-      saveComplaint(
-        updatedComplaint
+      setActionLoading(true);
+      setError("");
+
+      const complaintId =
+        selectedComplaint._id;
+
+      const data =
+        await apiRequest(
+          `/complaints/${complaintId}/status`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              status: newStatus,
+              notes:
+                resolutionNote.trim(),
+            }),
+          }
+        );
+
+      const updated =
+        data.complaint;
+
+      setSelectedComplaint(
+        updated
       );
 
       setComplaints(
         (previous) =>
           previous.map(
             (complaint) =>
-              complaint.id ===
-              updatedComplaint.id
-                ? updatedComplaint
+              String(
+                complaint._id
+              ) ===
+              String(
+                updated._id
+              )
+                ? updated
                 : complaint
           )
-      );
-
-      setSelectedComplaint(
-        updatedComplaint
       );
 
       window.dispatchEvent(
@@ -690,177 +759,89 @@ function StaffDashboard() {
         )
       );
 
-    } catch (error) {
+    } catch (err) {
 
       console.error(
-        "Unable to update complaint:",
-        error
+        "Unable to update status:",
+        err
       );
 
-      alert(
-        "Unable to update complaint. Please try again."
+      setError(
+        err.message ||
+          "Unable to update complaint status."
       );
+
+    } finally {
+
+      setActionLoading(false);
+
     }
   };
 
-
   /* =======================================================
-     PROOF IMAGE UPLOAD
-  ======================================================= */
-
-  const handleProofUpload = (
-    event
-  ) => {
-
-    const file =
-      event.target.files?.[0];
-
-    if (!file) return;
-
-
-    if (
-      !file.type.startsWith(
-        "image/"
-      )
-    ) {
-
-      alert(
-        "Please select an image file."
-      );
-
-      return;
-    }
-
-
-    if (
-      file.size >
-      5 * 1024 * 1024
-    ) {
-
-      alert(
-        "Proof image must be smaller than 5 MB."
-      );
-
-      return;
-    }
-
-
-    const reader =
-      new FileReader();
-
-
-    reader.onload = () => {
-
-      setProofImage(
-        reader.result
-      );
-
-      setProofName(
-        file.name
-      );
-
-    };
-
-
-    reader.readAsDataURL(file);
-  };
-
-
-  /* =======================================================
-     COMPLETE COMPLAINT
+     COMPLETE / RESOLVE COMPLAINT
   ======================================================= */
 
   const handleCompleteComplaint =
-    () => {
+    async () => {
 
       if (!selectedComplaint) {
         return;
       }
 
-
       const cleanNote =
         resolutionNote.trim();
 
-
       if (!cleanNote) {
 
-        alert(
-          "Please add a resolution note before completing."
+        setError(
+          "Please add a resolution note before completing the complaint."
         );
 
         return;
       }
-
-
-      if (!proofImage) {
-
-        alert(
-          "Please upload a proof image before completing."
-        );
-
-        return;
-      }
-
-
-      const completedComplaint = {
-
-        ...selectedComplaint,
-
-        status: "Completed",
-
-        staffStatus:
-          "Completed",
-
-        resolutionNote:
-          cleanNote,
-
-        proofImage:
-          proofImage,
-
-        proofImageName:
-          proofName,
-
-        completedBy:
-          staff.name,
-
-        completedById:
-          staff.id || "",
-
-        completedDate:
-          new Date().toISOString(),
-
-        lastUpdatedBy:
-          staff.name,
-
-        lastUpdatedAt:
-          new Date().toISOString(),
-
-      };
-
 
       try {
 
-        saveComplaint(
-          completedComplaint
-        );
+        setActionLoading(true);
+        setError("");
 
+        const complaintId =
+          selectedComplaint._id;
+
+        const data =
+          await apiRequest(
+            `/complaints/${complaintId}/resolve`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                resolutionSummary:
+                  cleanNote,
+              }),
+            }
+          );
+
+        const updated =
+          data.complaint;
+
+        setSelectedComplaint(
+          updated
+        );
 
         setComplaints(
           (previous) =>
             previous.map(
               (complaint) =>
-                complaint.id ===
-                completedComplaint.id
-                  ? completedComplaint
+                String(
+                  complaint._id
+                ) ===
+                String(
+                  updated._id
+                )
+                  ? updated
                   : complaint
             )
         );
-
-
-        setSelectedComplaint(
-          completedComplaint
-        );
-
 
         window.dispatchEvent(
           new Event(
@@ -868,25 +849,113 @@ function StaffDashboard() {
           )
         );
 
-
-        alert(
-          `Complaint ${completedComplaint.id} has been marked as completed.`
-        );
-
-
-      } catch (error) {
+      } catch (err) {
 
         console.error(
-          "Unable to complete complaint:",
-          error
+          "Unable to resolve complaint:",
+          err
         );
 
-        alert(
-          "Unable to complete complaint. Please try again."
+        setError(
+          err.message ||
+            "Unable to resolve complaint."
         );
+
+      } finally {
+
+        setActionLoading(false);
+
       }
     };
 
+  /* =======================================================
+     ADD UPDATE
+  ======================================================= */
+
+  const handleAddUpdate =
+    async () => {
+
+      if (!selectedComplaint) {
+        return;
+      }
+
+      const cleanNote =
+        resolutionNote.trim();
+
+      if (!cleanNote) {
+
+        setError(
+          "Please enter an update message."
+        );
+
+        return;
+      }
+
+      try {
+
+        setActionLoading(true);
+        setError("");
+
+        const complaintId =
+          selectedComplaint._id;
+
+        const data =
+          await apiRequest(
+            `/complaints/${complaintId}/updates`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                message:
+                  cleanNote,
+                isInternal: false,
+              }),
+            }
+          );
+
+        const updated =
+          data.complaint;
+
+        setSelectedComplaint(
+          updated
+        );
+
+        setComplaints(
+          (previous) =>
+            previous.map(
+              (complaint) =>
+                String(
+                  complaint._id
+                ) ===
+                String(
+                  updated._id
+                )
+                  ? updated
+                  : complaint
+            )
+        );
+
+        alert(
+          "Complaint update added successfully."
+        );
+
+      } catch (err) {
+
+        console.error(
+          "Unable to add update:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Unable to add complaint update."
+        );
+
+      } finally {
+
+        setActionLoading(false);
+
+      }
+    };
 
   /* =======================================================
      RENDER
@@ -899,7 +968,7 @@ function StaffDashboard() {
       <div className="staff-layout">
 
         {/* =================================================
-            LEFT SIDEBAR
+            SIDEBAR
         ================================================= */}
 
         <aside className="staff-sidebar">
@@ -911,6 +980,7 @@ function StaffDashboard() {
             </div>
 
             <div>
+
               <strong>
                 CampusVoice
               </strong>
@@ -918,10 +988,10 @@ function StaffDashboard() {
               <span>
                 Staff Portal
               </span>
+
             </div>
 
           </div>
-
 
           <nav className="staff-sidebar-menu">
 
@@ -933,7 +1003,6 @@ function StaffDashboard() {
               Dashboard
             </a>
 
-
             <a
               href="#my-complaints"
               className="staff-sidebar-link"
@@ -941,7 +1010,6 @@ function StaffDashboard() {
               <span>▣</span>
               My Complaints
             </a>
-
 
             <Link
               to="/profile"
@@ -952,7 +1020,6 @@ function StaffDashboard() {
             </Link>
 
           </nav>
-
 
           <div className="staff-sidebar-help">
 
@@ -974,20 +1041,17 @@ function StaffDashboard() {
 
           </div>
 
-
           <div className="staff-sidebar-decoration">
             CampusVoice
           </div>
 
         </aside>
 
-
         {/* =================================================
-            MAIN CONTENT
+            MAIN
         ================================================= */}
 
         <main className="staff-main">
-
 
           {/* =================================================
               HEADER
@@ -1015,7 +1079,6 @@ function StaffDashboard() {
 
             </div>
 
-
             <div className="staff-user-card">
 
               <div className="staff-avatar">
@@ -1025,7 +1088,6 @@ function StaffDashboard() {
                   .toUpperCase()}
 
               </div>
-
 
               <div>
 
@@ -1048,583 +1110,639 @@ function StaffDashboard() {
 
           </header>
 
-
           {/* =================================================
-              STATISTICS
+              ERROR
           ================================================= */}
 
-          <section className="staff-stats">
+          {error && (
 
-
-            <div className="staff-stat-card">
-
-              <div className="stat-icon assigned">
-                ▣
-              </div>
-
-              <div>
-
-                <span>
-                  Total Assigned
-                </span>
-
-                <strong>
-                  {assignedComplaints.length}
-                </strong>
-
-                <small>
-                  Complaints assigned to you
-                </small>
-
-              </div>
-
+            <div className="form-error">
+              {error}
             </div>
 
-
-            <div className="staff-stat-card">
-
-              <div className="stat-icon pending">
-                ◷
-              </div>
-
-              <div>
-
-                <span>
-                  Pending
-                </span>
-
-                <strong>
-                  {pendingCount}
-                </strong>
-
-                <small>
-                  Awaiting action
-                </small>
-
-              </div>
-
-            </div>
-
-
-            <div className="staff-stat-card">
-
-              <div className="stat-icon progress">
-                ◔
-              </div>
-
-              <div>
-
-                <span>
-                  In Progress
-                </span>
-
-                <strong>
-                  {progressCount}
-                </strong>
-
-                <small>
-                  Currently being resolved
-                </small>
-
-              </div>
-
-            </div>
-
-
-            <div className="staff-stat-card">
-
-              <div className="stat-icon completed">
-                ✓
-              </div>
-
-              <div>
-
-                <span>
-                  Completed
-                </span>
-
-                <strong>
-                  {completedCount}
-                </strong>
-
-                <small>
-                  Resolved and updated
-                </small>
-
-              </div>
-
-            </div>
-
-
-            <div className="staff-stat-card">
-
-              <div className="stat-icon high">
-                !
-              </div>
-
-              <div>
-
-                <span>
-                  High Priority
-                </span>
-
-                <strong>
-                  {highPriorityCount}
-                </strong>
-
-                <small>
-                  Requires attention
-                </small>
-
-              </div>
-
-            </div>
-
-          </section>
-
+          )}
 
           {/* =================================================
-              CONTENT GRID
+              LOADING
           ================================================= */}
 
-          <div className="staff-content-grid">
+          {loading ? (
 
+            <div className="staff-no-results">
 
-            {/* =================================================
-                COMPLAINTS
-            ================================================= */}
+              <div>
+                ⏳
+              </div>
 
-            <section
-              className="staff-complaints-panel"
-              id="my-complaints"
-            >
+              <h3>
+                Loading complaints...
+              </h3>
 
-              <div className="staff-panel-header">
+              <p>
+                Please wait while we fetch
+                your assigned complaints.
+              </p>
 
-                <div>
+            </div>
 
-                  <h2>
-                    My Assigned Complaints
-                  </h2>
+          ) : (
 
-                  <p>
-                    View and manage all complaints
-                    assigned to you.
-                  </p>
+            <>
 
-                </div>
+              {/* =================================================
+                  STATISTICS
+              ================================================= */}
 
+              <section className="staff-stats">
 
-                <div className="staff-filters">
+                <div className="staff-stat-card">
 
-                  <div className="staff-search">
+                  <div className="stat-icon assigned">
+                    ▣
+                  </div>
+
+                  <div>
 
                     <span>
-                      ⌕
+                      Total Assigned
                     </span>
 
-                    <input
-                      type="text"
-                      placeholder="Search by ID, title or category..."
-                      value={search}
-                      onChange={(event) =>
-                        setSearch(
-                          event.target.value
-                        )
-                      }
-                    />
-
-                  </div>
-
-
-                  <select
-                    value={statusFilter}
-                    onChange={(event) =>
-                      setStatusFilter(
-                        event.target.value
-                      )
-                    }
-                  >
-
-                    <option value="All">
-                      All Status
-                    </option>
-
-                    <option value="Pending">
-                      Pending
-                    </option>
-
-                    <option value="In Progress">
-                      In Progress
-                    </option>
-
-                    <option value="Completed">
-                      Completed
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
-
-
-              {/* HIGH PRIORITY */}
-
-              <PrioritySection
-                title="High Priority"
-                description="Requires immediate attention"
-                icon="!"
-                items={highPriority}
-                priorityClass="priority-high"
-                onOpen={openComplaint}
-                getStatusClass={getStatusClass}
-                getPriorityClass={getPriorityClass}
-                formatDate={formatDate}
-              />
-
-
-              {/* MEDIUM PRIORITY */}
-
-              <PrioritySection
-                title="Medium Priority"
-                description="Regular complaints requiring action"
-                icon="◷"
-                items={mediumPriority}
-                priorityClass="priority-medium"
-                onOpen={openComplaint}
-                getStatusClass={getStatusClass}
-                getPriorityClass={getPriorityClass}
-                formatDate={formatDate}
-              />
-
-
-              {/* LOW PRIORITY */}
-
-              <PrioritySection
-                title="Low Priority"
-                description="Can be handled after urgent issues"
-                icon="↓"
-                items={lowPriority}
-                priorityClass="priority-low"
-                onOpen={openComplaint}
-                getStatusClass={getStatusClass}
-                getPriorityClass={getPriorityClass}
-                formatDate={formatDate}
-              />
-
-
-              {filteredComplaints.length === 0 && (
-
-                <div className="staff-no-results">
-
-                  <div>
-                    ✓
-                  </div>
-
-                  <h3>
-                    No assigned complaints
-                  </h3>
-
-                  <p>
-                    Complaints assigned to you by
-                    the administrator will appear here.
-                  </p>
-
-                </div>
-
-              )}
-
-            </section>
-
-
-            {/* =================================================
-                RIGHT COLUMN
-            ================================================= */}
-
-            <aside className="staff-right-column">
-
-
-              {/* QUICK ACTIONS */}
-
-              <section className="staff-side-panel">
-
-                <div className="side-panel-heading">
-
-                  <span>
-                    ⚙
-                  </span>
-
-                  <h3>
-                    Quick Actions
-                  </h3>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  className="quick-action primary"
-                  onClick={() =>
-                    document
-                      .getElementById(
-                        "my-complaints"
-                      )
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                      })
-                  }
-                >
-
-                  <span>
-                    ✓
-                  </span>
-
-                  <div>
-
                     <strong>
-                      Update Complaint Status
+                      {complaints.length}
                     </strong>
 
                     <small>
-                      Mark as In Progress or Completed
+                      Complaints assigned to you
                     </small>
 
                   </div>
 
-                </button>
-
-
-                <button
-                  type="button"
-                  className="quick-action"
-                  onClick={() => {
-
-                    if (selectedComplaint) {
-
-                      document
-                        .getElementById(
-                          "complaint-details"
-                        )
-                        ?.scrollIntoView({
-                          behavior: "smooth",
-                        });
-
-                    } else {
-
-                      alert(
-                        "Open a complaint first to upload proof."
-                      );
-
-                    }
-
-                  }}
-                >
-
-                  <span>
-                    ▧
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      Upload Proof Image
-                    </strong>
-
-                    <small>
-                      Add evidence for completed work
-                    </small>
-
-                  </div>
-
-                </button>
-
-              </section>
-
-
-              {/* STATUS OVERVIEW */}
-
-              <section className="staff-side-panel">
-
-                <div className="side-panel-heading">
-
-                  <span>
-                    ◔
-                  </span>
-
-                  <h3>
-                    Status Overview
-                  </h3>
-
                 </div>
 
+                <div className="staff-stat-card">
 
-                <div className="status-overview">
-
-                  <div className="status-circle">
-
-                    <strong>
-                      {assignedComplaints.length}
-                    </strong>
-
-                    <span>
-                      Total
-                    </span>
-
-                  </div>
-
-
-                  <div className="status-legend">
-
-                    <div>
-
-                      <i className="dot pending-dot" />
-
-                      <span>
-                        Pending
-                      </span>
-
-                      <strong>
-                        {pendingCount}
-                      </strong>
-
-                    </div>
-
-
-                    <div>
-
-                      <i className="dot progress-dot" />
-
-                      <span>
-                        In Progress
-                      </span>
-
-                      <strong>
-                        {progressCount}
-                      </strong>
-
-                    </div>
-
-
-                    <div>
-
-                      <i className="dot completed-dot" />
-
-                      <span>
-                        Completed
-                      </span>
-
-                      <strong>
-                        {completedCount}
-                      </strong>
-
-                    </div>
-
-
-                    <div>
-
-                      <i className="dot high-dot" />
-
-                      <span>
-                        High Priority
-                      </span>
-
-                      <strong>
-                        {highPriorityCount}
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </section>
-
-
-              {/* RECENT ACTIVITY */}
-
-              <section className="staff-side-panel">
-
-                <div className="side-panel-heading">
-
-                  <span>
+                  <div className="stat-icon pending">
                     ◷
-                  </span>
+                  </div>
 
-                  <h3>
-                    Recent Activity
-                  </h3>
+                  <div>
+
+                    <span>
+                      Pending
+                    </span>
+
+                    <strong>
+                      {pendingCount}
+                    </strong>
+
+                    <small>
+                      Awaiting action
+                    </small>
+
+                  </div>
 
                 </div>
 
+                <div className="staff-stat-card">
 
-                <div className="activity-list">
+                  <div className="stat-icon progress">
+                    ◔
+                  </div>
 
-                  {assignedComplaints
-                    .slice(0, 4)
-                    .map((complaint) => (
+                  <div>
 
-                      <div
-                        className="activity-item"
-                        key={complaint.id}
+                    <span>
+                      In Progress
+                    </span>
+
+                    <strong>
+                      {progressCount}
+                    </strong>
+
+                    <small>
+                      Currently being resolved
+                    </small>
+
+                  </div>
+
+                </div>
+
+                <div className="staff-stat-card">
+
+                  <div className="stat-icon completed">
+                    ✓
+                  </div>
+
+                  <div>
+
+                    <span>
+                      Completed
+                    </span>
+
+                    <strong>
+                      {completedCount}
+                    </strong>
+
+                    <small>
+                      Resolved and updated
+                    </small>
+
+                  </div>
+
+                </div>
+
+                <div className="staff-stat-card">
+
+                  <div className="stat-icon high">
+                    !
+                  </div>
+
+                  <div>
+
+                    <span>
+                      High Priority
+                    </span>
+
+                    <strong>
+                      {highPriorityCount}
+                    </strong>
+
+                    <small>
+                      Requires attention
+                    </small>
+
+                  </div>
+
+                </div>
+
+              </section>
+
+              {/* =================================================
+                  CONTENT GRID
+              ================================================= */}
+
+              <div className="staff-content-grid">
+
+                {/* =================================================
+                    COMPLAINTS
+                ================================================= */}
+
+                <section
+                  className="staff-complaints-panel"
+                  id="my-complaints"
+                >
+
+                  <div className="staff-panel-header">
+
+                    <div>
+
+                      <h2>
+                        My Assigned Complaints
+                      </h2>
+
+                      <p>
+                        View and manage all complaints
+                        assigned to you.
+                      </p>
+
+                    </div>
+
+                    <div className="staff-filters">
+
+                      <div className="staff-search">
+
+                        <span>
+                          ⌕
+                        </span>
+
+                        <input
+                          type="text"
+                          placeholder="Search by ID, title or category..."
+                          value={search}
+                          onChange={(event) =>
+                            setSearch(
+                              event.target.value
+                            )
+                          }
+                        />
+
+                      </div>
+
+                      <select
+                        value={statusFilter}
+                        onChange={(event) =>
+                          setStatusFilter(
+                            event.target.value
+                          )
+                        }
                       >
 
-                        <span className="activity-line">
-                          <i />
+                        <option value="All">
+                          All Status
+                        </option>
+
+                        <option value="Submitted">
+                          Submitted
+                        </option>
+
+                        <option value="Under Review">
+                          Under Review
+                        </option>
+
+                        <option value="In Progress">
+                          In Progress
+                        </option>
+
+                        <option value="Resolved">
+                          Resolved
+                        </option>
+
+                        <option value="Closed">
+                          Closed
+                        </option>
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+                  {/* HIGH */}
+
+                  <PrioritySection
+                    title="High Priority"
+                    description="Requires immediate attention"
+                    icon="!"
+                    items={highPriority}
+                    priorityClass="priority-high"
+                    onOpen={openComplaint}
+                    getStatusClass={
+                      getStatusClass
+                    }
+                    getPriorityClass={
+                      getPriorityClass
+                    }
+                    formatDate={formatDate}
+                  />
+
+                  {/* MEDIUM */}
+
+                  <PrioritySection
+                    title="Medium Priority"
+                    description="Regular complaints requiring action"
+                    icon="◷"
+                    items={mediumPriority}
+                    priorityClass="priority-medium"
+                    onOpen={openComplaint}
+                    getStatusClass={
+                      getStatusClass
+                    }
+                    getPriorityClass={
+                      getPriorityClass
+                    }
+                    formatDate={formatDate}
+                  />
+
+                  {/* LOW */}
+
+                  <PrioritySection
+                    title="Low Priority"
+                    description="Can be handled after urgent issues"
+                    icon="↓"
+                    items={lowPriority}
+                    priorityClass="priority-low"
+                    onOpen={openComplaint}
+                    getStatusClass={
+                      getStatusClass
+                    }
+                    getPriorityClass={
+                      getPriorityClass
+                    }
+                    formatDate={formatDate}
+                  />
+
+                  {filteredComplaints.length === 0 && (
+
+                    <div className="staff-no-results">
+
+                      <div>
+                        ✓
+                      </div>
+
+                      <h3>
+                        No assigned complaints
+                      </h3>
+
+                      <p>
+                        Complaints assigned to you by
+                        the administrator will appear here.
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </section>
+
+                {/* =================================================
+                    RIGHT COLUMN
+                ================================================= */}
+
+                <aside className="staff-right-column">
+
+                  {/* QUICK ACTIONS */}
+
+                  <section className="staff-side-panel">
+
+                    <div className="side-panel-heading">
+
+                      <span>
+                        ⚙
+                      </span>
+
+                      <h3>
+                        Quick Actions
+                      </h3>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      className="quick-action primary"
+                      onClick={() =>
+                        document
+                          .getElementById(
+                            "my-complaints"
+                          )
+                          ?.scrollIntoView({
+                            behavior:
+                              "smooth",
+                          })
+                      }
+                    >
+
+                      <span>
+                        ✓
+                      </span>
+
+                      <div>
+
+                        <strong>
+                          Update Complaint Status
+                        </strong>
+
+                        <small>
+                          Mark as In Progress or Resolved
+                        </small>
+
+                      </div>
+
+                    </button>
+
+                    <button
+                      type="button"
+                      className="quick-action"
+                      onClick={() => {
+
+                        if (
+                          selectedComplaint
+                        ) {
+
+                          document
+                            .getElementById(
+                              "complaint-details"
+                            )
+                            ?.scrollIntoView({
+                              behavior:
+                                "smooth",
+                            });
+
+                        } else {
+
+                          alert(
+                            "Open a complaint first."
+                          );
+
+                        }
+
+                      }}
+                    >
+
+                      <span>
+                        ▧
+                      </span>
+
+                      <div>
+
+                        <strong>
+                          Open Complaint
+                        </strong>
+
+                        <small>
+                          View details and update complaint
+                        </small>
+
+                      </div>
+
+                    </button>
+
+                  </section>
+
+                  {/* STATUS OVERVIEW */}
+
+                  <section className="staff-side-panel">
+
+                    <div className="side-panel-heading">
+
+                      <span>
+                        ◔
+                      </span>
+
+                      <h3>
+                        Status Overview
+                      </h3>
+
+                    </div>
+
+                    <div className="status-overview">
+
+                      <div className="status-circle">
+
+                        <strong>
+                          {complaints.length}
+                        </strong>
+
+                        <span>
+                          Total
                         </span>
+
+                      </div>
+
+                      <div className="status-legend">
 
                         <div>
 
+                          <i className="dot pending-dot" />
+
+                          <span>
+                            Pending
+                          </span>
+
                           <strong>
-                            {complaint.id}
+                            {pendingCount}
                           </strong>
 
-                          <p>
+                        </div>
 
-                            {complaint.status ===
-                            "Completed"
-                              ? "Complaint marked as completed"
-                              : complaint.status ===
-                                "In Progress"
-                              ? "Complaint is being resolved"
-                              : "Complaint assigned to you"}
+                        <div>
 
-                          </p>
+                          <i className="dot progress-dot" />
 
-                          <small>
+                          <span>
+                            In Progress
+                          </span>
 
-                            {formatDateTime(
-                              complaint.lastUpdatedAt ||
-                              complaint.assignedDate ||
-                              complaint.date
-                            )}
+                          <strong>
+                            {progressCount}
+                          </strong>
 
-                          </small>
+                        </div>
+
+                        <div>
+
+                          <i className="dot completed-dot" />
+
+                          <span>
+                            Completed
+                          </span>
+
+                          <strong>
+                            {completedCount}
+                          </strong>
+
+                        </div>
+
+                        <div>
+
+                          <i className="dot high-dot" />
+
+                          <span>
+                            High Priority
+                          </span>
+
+                          <strong>
+                            {highPriorityCount}
+                          </strong>
 
                         </div>
 
                       </div>
 
-                    ))}
+                    </div>
 
+                  </section>
 
-                  {assignedComplaints.length === 0 && (
+                  {/* RECENT ACTIVITY */}
 
-                    <p className="no-activity">
-                      No recent activity.
-                    </p>
+                  <section className="staff-side-panel">
 
-                  )}
+                    <div className="side-panel-heading">
 
-                </div>
+                      <span>
+                        ◷
+                      </span>
 
-              </section>
+                      <h3>
+                        Recent Activity
+                      </h3>
 
-            </aside>
+                    </div>
 
-          </div>
+                    <div className="activity-list">
 
+                      {complaints
+                        .slice(0, 4)
+                        .map(
+                          (complaint) => {
+
+                            const id =
+                              complaint.referenceId ||
+                              complaint._id;
+
+                            const status =
+                              String(
+                                complaint.status ||
+                                  ""
+                              ).toLowerCase();
+
+                            return (
+
+                              <div
+                                className="activity-item"
+                                key={id}
+                              >
+
+                                <span className="activity-line">
+                                  <i />
+                                </span>
+
+                                <div>
+
+                                  <strong>
+                                    {complaint.referenceId ||
+                                      complaint._id}
+                                  </strong>
+
+                                  <p>
+
+                                    {status ===
+                                    "resolved"
+                                      ? "Complaint resolved"
+                                      : status ===
+                                        "closed"
+                                      ? "Complaint closed"
+                                      : status ===
+                                        "in progress"
+                                      ? "Complaint is being resolved"
+                                      : "Complaint assigned to you"}
+
+                                  </p>
+
+                                  <small>
+                                    {formatDateTime(
+                                      complaint.updatedAt ||
+                                        complaint.createdAt
+                                    )}
+                                  </small>
+
+                                </div>
+
+                              </div>
+
+                            );
+
+                          }
+                        )}
+
+                      {complaints.length === 0 && (
+
+                        <p className="no-activity">
+                          No recent activity.
+                        </p>
+
+                      )}
+
+                    </div>
+
+                  </section>
+
+                </aside>
+
+              </div>
+
+            </>
+
+          )}
 
           {/* =================================================
               COMPLAINT DETAIL MODAL
@@ -1651,7 +1769,6 @@ function StaffDashboard() {
                 id="complaint-details"
               >
 
-
                 {/* HEADER */}
 
                 <div className="detail-modal-header">
@@ -1663,30 +1780,32 @@ function StaffDashboard() {
                     </span>
 
                     <h2>
-                      {selectedComplaint.id}
+                      {selectedComplaint.referenceId ||
+                        selectedComplaint._id}
                     </h2>
 
                     <h3>
-
                       {selectedComplaint.title ||
                         selectedComplaint.subject ||
                         "Untitled Complaint"}
-
                     </h3>
 
                   </div>
 
-
                   <button
                     type="button"
                     className="detail-close"
-                    onClick={closeComplaint}
+                    onClick={
+                      closeComplaint
+                    }
+                    disabled={
+                      actionLoading
+                    }
                   >
                     ×
                   </button>
 
                 </div>
-
 
                 {/* STATUS */}
 
@@ -1697,27 +1816,21 @@ function StaffDashboard() {
                       selectedComplaint.priority
                     )}`}
                   >
-
                     {selectedComplaint.priority ||
                       "Medium"}{" "}
                     Priority
-
                   </span>
-
 
                   <span
                     className={`staff-status-badge ${getStatusClass(
                       selectedComplaint.status
                     )}`}
                   >
-
                     {selectedComplaint.status ||
-                      "Pending"}
-
+                      "Submitted"}
                   </span>
 
                 </div>
-
 
                 {/* INFORMATION */}
 
@@ -1736,7 +1849,6 @@ function StaffDashboard() {
 
                   </div>
 
-
                   <div>
 
                     <span>
@@ -1749,7 +1861,6 @@ function StaffDashboard() {
                     </strong>
 
                   </div>
-
 
                   <div>
 
@@ -1764,26 +1875,21 @@ function StaffDashboard() {
 
                   </div>
 
-
                   <div>
 
                     <span>
-                      Assigned On
+                      Submitted On
                     </span>
 
                     <strong>
-
                       {formatDate(
-                        selectedComplaint.assignedDate ||
-                        selectedComplaint.date
+                        selectedComplaint.createdAt
                       )}
-
                     </strong>
 
                   </div>
 
                 </div>
-
 
                 {/* DESCRIPTION */}
 
@@ -1800,7 +1906,6 @@ function StaffDashboard() {
 
                 </div>
 
-
                 {/* STAFF ACTION */}
 
                 <div className="staff-action-section">
@@ -1808,7 +1913,6 @@ function StaffDashboard() {
                   <h3>
                     Staff Actions
                   </h3>
-
 
                   {/* STATUS */}
 
@@ -1821,49 +1925,64 @@ function StaffDashboard() {
                     <select
                       value={
                         selectedComplaint.status ||
-                        "Pending"
+                        "Submitted"
                       }
                       onChange={(event) =>
                         updateStatus(
                           event.target.value
                         )
                       }
+                      disabled={
+                        actionLoading
+                      }
                     >
 
-                      <option value="Pending">
-                        Pending
+                      <option value="Submitted">
+                        Submitted
+                      </option>
+
+                      <option value="Under Review">
+                        Under Review
                       </option>
 
                       <option value="In Progress">
                         In Progress
                       </option>
 
-                      <option value="Completed">
-                        Completed
+                      <option value="Resolved">
+                        Resolved
+                      </option>
+
+                      <option value="Closed">
+                        Closed
                       </option>
 
                     </select>
 
                   </div>
 
-
                   {/* RESOLUTION NOTE */}
 
                   <div className="resolution-field">
 
                     <label>
-                      Resolution Note
+                      Resolution / Update Note
                     </label>
 
                     <textarea
                       rows="5"
                       maxLength="500"
-                      placeholder="Describe what you did to resolve this complaint..."
-                      value={resolutionNote}
+                      placeholder="Describe what you did or add an update..."
+                      value={
+                        resolutionNote
+                      }
                       onChange={(event) =>
                         setResolutionNote(
                           event.target.value
                         )
+                      }
+                      disabled={
+                        actionLoading
                       }
                     />
 
@@ -1873,116 +1992,55 @@ function StaffDashboard() {
 
                   </div>
 
+                  {/* ACTION BUTTONS */}
 
-                  {/* PROOF IMAGE */}
-
-                  <div className="proof-section">
-
-                    <label>
-                      Upload Proof Image
-                    </label>
-
-                    <p>
-                      Add an image showing that the
-                      complaint has been resolved.
-                    </p>
-
-
-                    <input
-                      id="staff-proof-image"
-                      type="file"
-                      accept="image/*"
-                      onChange={
-                        handleProofUpload
-                      }
-                      hidden
-                    />
-
-
-                    {proofImage ? (
-
-                      <div className="proof-preview">
-
-                        <img
-                          src={proofImage}
-                          alt="Resolution proof"
-                        />
-
-                        <div>
-
-                          <strong>
-                            {proofName ||
-                              "Proof Image"}
-                          </strong>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-
-                              setProofImage("");
-
-                              setProofName("");
-
-                            }}
-                          >
-                            Remove
-                          </button>
-
-                        </div>
-
-                      </div>
-
-                    ) : (
-
-                      <label
-                        htmlFor="staff-proof-image"
-                        className="proof-upload-box"
-                      >
-
-                        <span>
-                          ▧
-                        </span>
-
-                        <strong>
-                          Choose Proof Image
-                        </strong>
-
-                        <small>
-                          JPG, PNG or WEBP · Max 5 MB
-                        </small>
-
-                      </label>
-
-                    )}
-
-                  </div>
-
-
-                  {/* COMPLETE */}
-
-                  <button
-                    type="button"
-                    className="complete-complaint-btn"
-                    onClick={
-                      handleCompleteComplaint
-                    }
-                    disabled={
-                      selectedComplaint.status ===
-                        "Completed" &&
-                      Boolean(
-                        selectedComplaint.proofImage
-                      )
-                    }
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      flexWrap: "wrap",
+                    }}
                   >
 
-                    ✓{" "}
+                    <button
+                      type="button"
+                      className="complete-complaint-btn"
+                      onClick={
+                        handleAddUpdate
+                      }
+                      disabled={
+                        actionLoading ||
+                        !resolutionNote.trim()
+                      }
+                    >
+                      {actionLoading
+                        ? "Saving..."
+                        : "Add Update"}
+                    </button>
 
-                    {selectedComplaint.status ===
-                    "Completed"
-                      ? "Complaint Completed"
-                      : "Mark as Completed"}
+                    <button
+                      type="button"
+                      className="complete-complaint-btn"
+                      onClick={
+                        handleCompleteComplaint
+                      }
+                      disabled={
+                        actionLoading ||
+                        selectedComplaint.status ===
+                          "Resolved" ||
+                        selectedComplaint.status ===
+                          "Closed"
+                      }
+                    >
+                      {actionLoading
+                        ? "Processing..."
+                        : selectedComplaint.status ===
+                          "Resolved"
+                        ? "Complaint Resolved"
+                        : "Mark as Resolved"}
+                    </button>
 
-                  </button>
+                  </div>
 
                 </div>
 
@@ -1991,11 +2049,6 @@ function StaffDashboard() {
             </div>
 
           )}
-
-
-          {/* =================================================
-              FOOTER
-          ================================================= */}
 
           <Footer />
 

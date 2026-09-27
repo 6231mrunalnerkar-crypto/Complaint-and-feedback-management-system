@@ -443,9 +443,9 @@ function StudentDashboard() {
               My Complaints
             </a>
 
-            <a href="#my-feedbacks">
+            <Link to="/my-feedbacks">
               My Feedbacks
-            </a>
+            </Link>
 
             <Link to="/profile">
               Profile

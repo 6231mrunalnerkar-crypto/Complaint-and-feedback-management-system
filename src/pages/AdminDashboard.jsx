@@ -1623,15 +1623,32 @@ const CategoriesSection = ({
 /* =========================================================
    COMPLAINT MODAL
 ========================================================= */
-
 const ComplaintModal = ({
   complaint,
   onClose,
   onStatusChange,
   onDelete,
+  staffList,
+  onAssignStaff,
+  assigningStaff,
 }) => {
-  if (!complaint) return null;
+  const [selectedStaff, setSelectedStaff] = useState("");
 
+  useEffect(() => {
+    if (!complaint) {
+      setSelectedStaff("");
+      return;
+    }
+
+    const assignedStaffId =
+      typeof complaint.assignedStaff === "object"
+        ? complaint.assignedStaff?._id || ""
+        : complaint.assignedStaff || "";
+
+    setSelectedStaff(assignedStaffId);
+  }, [complaint]);
+
+  if (!complaint) return null;
   return (
     <div className="admin-modal-overlay" onClick={onClose}>
       <div
@@ -1702,6 +1719,82 @@ const ComplaintModal = ({
             </strong>
           </div>
         </div>
+       {/* =====================================================
+    ASSIGN STAFF
+===================================================== */}
+
+<div className="assign-staff-section">
+
+  <label htmlFor="staff-select">
+    Assign Staff
+  </label>
+
+  <div className="assign-staff-controls">
+
+    <select
+      id="staff-select"
+      className="assign-staff-select"
+      value={selectedStaff}
+      onChange={(event) => {
+        setSelectedStaff(event.target.value);
+      }}
+      disabled={assigningStaff}
+    >
+
+      <option value="">
+        Select Staff Member
+      </option>
+
+      {Array.isArray(staffList) &&
+        staffList.map((staff) => (
+          <option
+            key={staff._id}
+            value={staff._id}
+          >
+            {staff.name} ({staff.email})
+          </option>
+        ))}
+
+    </select>
+
+    <button
+      type="button"
+      className="assign-staff-button"
+      disabled={
+        assigningStaff ||
+        !selectedStaff
+      }
+      onClick={() => {
+        onAssignStaff(
+          complaint,
+          selectedStaff
+        );
+      }}
+    >
+      {assigningStaff
+        ? "Assigning..."
+        : "Assign Staff"}
+    </button>
+
+  </div>
+
+  {complaint?.assignedStaff && (
+    <div className="assigned-staff-info">
+
+      <span>Currently Assigned:</span>
+
+      <strong>
+        {typeof complaint.assignedStaff === "object"
+          ? complaint.assignedStaff.name ||
+            complaint.assignedStaff.email ||
+            "Staff Member"
+          : "Staff Member"}
+      </strong>
+
+    </div>
+  )}
+
+</div>
 
         <div className="modal-description">
           <span>Description</span>
@@ -2207,6 +2300,7 @@ const loadComplaints = async () => {
 
 useEffect(() => {
   loadComplaints();
+  loadStaffList();
 }, []);
 
 const [activeSection, setActiveSection] =
@@ -2228,11 +2322,15 @@ const [activeSection, setActiveSection] =
   const [feedbackRatingFilter, setFeedbackRatingFilter] =
     useState("All");
 
-  const [selectedComplaint, setSelectedComplaint] =
-    useState(null);
+ const [selectedComplaint, setSelectedComplaint] =
+  useState(null);
 
-  const [selectedFeedback, setSelectedFeedback] =
-    useState(null);
+const [staffList, setStaffList] = useState([]);
+const [selectedStaff, setSelectedStaff] = useState("");
+const [assigningStaff, setAssigningStaff] = useState(false);
+
+const [selectedFeedback, setSelectedFeedback] =
+  useState(null);
 
   const [showAnalytics, setShowAnalytics] =
     useState(false);
@@ -2240,11 +2338,23 @@ const [activeSection, setActiveSection] =
   const [showAddCategory, setShowAddCategory] =
     useState(false);
 
-  const [newCategoryName, setNewCategoryName] =
-    useState("");
+ const [newCategoryName, setNewCategoryName] =
+  useState("");
 
- const refreshData = async () => {
-  await loadComplaints();
+const loadStaffList = async () => {
+  try {
+    const response = await api.get("/complaints/staff");
+
+    if (response.success) {
+      setStaffList(response.staff || []);
+    }
+  } catch (error) {
+    console.error("Unable to load staff:", error);
+    toast.error("Unable to load staff list.");
+  }
+};
+
+const refreshData = async () => {
 
   setFeedbackList(getStoredFeedback());
   setCategories(getStoredCategories());
@@ -2259,8 +2369,83 @@ const [activeSection, setActiveSection] =
 
     navigate("/");
   };
+  const handleAssignStaff = async (
+  complaint,
+  staffId
+) => {
+  console.log("ASSIGN CLICKED");
+  console.log("Complaint:", complaint);
+  console.log("Staff ID:", staffId);
 
- const handleStatusChange = async (
+  if (!complaint || !staffId) {
+    toast.error("Please select a staff member.");
+    return;
+  }
+
+  try {
+    setAssigningStaff(true);
+
+    console.log("Sending assignment request...");
+
+    const response = await api.patch(
+      `/complaints/${complaint._id}/assign`,
+      {
+        staffId: staffId,
+      }
+    );
+
+    console.log("Assign API response:", response);
+
+    if (!response.success) {
+      throw new Error(
+        response.message ||
+          "Failed to assign complaint."
+      );
+    }
+
+    const assignedStaffMember =
+      staffList.find(
+        (staff) =>
+          String(staff._id) ===
+          String(staffId)
+      );
+
+    const updatedComplaint = {
+      ...complaint,
+      assignedStaff:
+        assignedStaffMember || staffId,
+    };
+
+    setComplaints((current) =>
+      current.map((item) =>
+        getComplaintId(item) ===
+        getComplaintId(complaint)
+          ? updatedComplaint
+          : item
+      )
+    );
+
+    setSelectedComplaint(updatedComplaint);
+
+    toast.success(
+      "Complaint assigned successfully!"
+    );
+
+       window.dispatchEvent(
+      new Event("cfms-complaints-updated")
+    );
+
+     } catch (error) {
+    console.error("Assign staff error:", error);
+
+    toast.error(
+      error.message || "Failed to assign complaint."
+    );
+  } finally {
+    setAssigningStaff(false);
+  }
+};
+const handleStatusChange = async (
   complaint,
   newStatus
 ) => {
@@ -2274,19 +2459,21 @@ const [activeSection, setActiveSection] =
 
     if (!response.success) {
       throw new Error(
-        response.message || "Failed to update complaint status"
+        response.message ||
+          "Failed to update complaint status"
       );
     }
 
     const id = getComplaintId(complaint);
 
-    const updatedComplaints = complaints.map((item) =>
-      getComplaintId(item) === id
-        ? {
-            ...item,
-            status: newStatus,
-          }
-        : item
+    const updatedComplaints = complaints.map(
+      (item) =>
+        getComplaintId(item) === id
+          ? {
+              ...item,
+              status: newStatus,
+            }
+          : item
     );
 
     setComplaints(updatedComplaints);
@@ -2305,7 +2492,9 @@ const [activeSection, setActiveSection] =
       new Event("cfms-data-updated")
     );
 
-    toast.success("Complaint status updated");
+    toast.success(
+      "Complaint status updated successfully"
+    );
   } catch (error) {
     console.error(
       "Complaint status update error:",
@@ -2313,7 +2502,8 @@ const [activeSection, setActiveSection] =
     );
 
     toast.error(
-      error.message || "Failed to update complaint status"
+      error.message ||
+        "Failed to update complaint status"
     );
   }
 };
@@ -2567,14 +2757,17 @@ const [activeSection, setActiveSection] =
         </main>
       </div>
 
-      {selectedComplaint && (
-        <ComplaintModal
-          complaint={selectedComplaint}
-          onClose={() => setSelectedComplaint(null)}
-          onStatusChange={handleStatusChange}
-          onDelete={handleDeleteComplaint}
-        />
-      )}
+     {selectedComplaint && (
+  <ComplaintModal
+    complaint={selectedComplaint}
+    onClose={() => setSelectedComplaint(null)}
+    onStatusChange={handleStatusChange}
+    onDelete={handleDeleteComplaint}
+    staffList={staffList}
+    onAssignStaff={handleAssignStaff}
+    assigningStaff={assigningStaff}
+  />
+)}
 
       {selectedFeedback && (
         <FeedbackModal

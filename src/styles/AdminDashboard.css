@@ -2310,3 +2310,118 @@
     gap: 5px;
   }
 }
+/* =========================================================
+   ASSIGN STAFF
+========================================================= */
+
+.assign-staff-section {
+  margin: 28px 0 22px;
+}
+
+.assign-staff-section > label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.assign-staff-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+
+.assign-staff-select {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #1f2937;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  outline: none;
+  cursor: pointer;
+}
+
+.assign-staff-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.assign-staff-select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.assign-staff-button {
+  height: 44px;
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition: 0.2s ease;
+}
+
+.assign-staff-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.assign-staff-button:disabled {
+  background: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.assigned-staff-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-top: 10px;
+  padding: 9px 12px;
+
+  border-radius: 7px;
+
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+
+  font-size: 13px;
+  color: #475569;
+}
+
+.assigned-staff-info strong {
+  color: #166534;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .assign-staff-controls {
+    flex-direction: column;
+  }
+
+  .assign-staff-select,
+  .assign-staff-button {
+    width: 100%;
+  }
+}

@@ -1,7 +1,6 @@
 const router = require("express").Router();
 
-const controller =
-  require("../controllers/feedbackController");
+const controller = require("../controllers/feedbackController");
 
 const {
   protect,
@@ -9,8 +8,8 @@ const {
 } = require("../middleware/authMiddleware");
 
 // ======================================================
-// VERIFY COMPLAINT
-// Public - user complaint verify kar sakta hai
+// VERIFY COMPLAINT FOR FEEDBACK
+// Public - complaint reference verify karne ke liye
 // ======================================================
 
 router.get(
@@ -20,14 +19,29 @@ router.get(
 
 // ======================================================
 // MY FEEDBACKS
+// Student - logged-in student's feedbacks
 // IMPORTANT: /my MUST COME BEFORE /
 // ======================================================
-
 router.get(
   "/my",
   protect,
-  authorize("student"),
   controller.getMyFeedbacks
+);
+
+
+// ======================================================
+// ADMIN - LIST ALL FEEDBACK
+// ======================================================
+
+router.get(
+  "/",
+  protect,
+  authorize("admin"),
+  (req, res, next) => {
+    console.log("🔥 ADMIN /FEEDBACK ROUTE HIT 🔥");
+    next();
+  },
+  controller.listFeedback
 );
 
 // ======================================================
@@ -40,7 +54,7 @@ router.post(
     const authHeader =
       req.headers.authorization;
 
-    // Anonymous user
+    // No authorization header = anonymous feedback
     if (!authHeader) {
       return controller.submitFeedback(
         req,
@@ -49,7 +63,7 @@ router.post(
       );
     }
 
-    // Logged-in user
+    // Authorization header present = logged-in user
     return protect(
       req,
       res,
@@ -57,17 +71,6 @@ router.post(
     );
   },
   controller.submitFeedback
-);
-
-// ======================================================
-// ADMIN FEEDBACK
-// ======================================================
-
-router.get(
-  "/",
-  protect,
-  authorize("admin"),
-  controller.listFeedback
 );
 
 module.exports = router;

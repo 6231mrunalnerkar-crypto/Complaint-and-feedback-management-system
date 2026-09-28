@@ -2279,9 +2279,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   const [complaints, setComplaints] = useState([]);
-  const [feedbackList, setFeedbackList] = useState(() =>
-    getStoredFeedback()
-  );
+  const [feedbackList, setFeedbackList] = useState([]);
 
   const [categories, setCategories] = useState(() =>
   getStoredCategories()
@@ -2297,12 +2295,36 @@ const loadComplaints = async () => {
     toast.error(error.message || "Failed to load complaints");
   }
 };
+const loadFeedback = async () => {
+  try {
+    const response = await api.get("/feedback");
+
+    if (response.success) {
+      setFeedbackList(
+        response.data?.feedback ||
+        response.feedback ||
+        []
+      );
+    } else {
+      console.error(
+        "Failed to load feedback:",
+        response.message
+      );
+    }
+  } catch (error) {
+    console.error("Failed to load feedback:", error);
+
+    toast.error(
+      error.message || "Failed to load feedback"
+    );
+  }
+};
 
 useEffect(() => {
   loadComplaints();
   loadStaffList();
+  loadFeedback();
 }, []);
-
 const [activeSection, setActiveSection] =
   useState("overview");
   const [search, setSearch] = useState("");
@@ -2355,8 +2377,10 @@ const loadStaffList = async () => {
 };
 
 const refreshData = async () => {
+  await loadComplaints();
+  await loadStaffList();
+  await loadFeedback();
 
-  setFeedbackList(getStoredFeedback());
   setCategories(getStoredCategories());
 
   toast.success("Dashboard data refreshed");

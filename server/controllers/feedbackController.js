@@ -405,34 +405,45 @@ async function listFeedback(req, res) {
     }
 
     // --------------------------------------------------
-    // FETCH FEEDBACK
-    // --------------------------------------------------
+// FETCH FEEDBACK
+// --------------------------------------------------
 
-    const [items, total] =
-      await Promise.all([
-        Feedback.find(filter)
-          .populate(
-            "complaint",
-            "referenceId title status category"
-          )
-          .populate(
-            "submittedBy",
-            "name email rollNumber"
-          )
-          .sort({
-            createdAt: -1,
-          })
-          .skip(
-            (safePage - 1) *
-              safeLimit
-          )
-          .limit(safeLimit),
+console.log("🔥 ADMIN LIST FEEDBACK CALLED");
 
-        Feedback.countDocuments(
-          filter
-        ),
-      ]);
+const debugAllFeedback = await Feedback.find({}).lean();
 
+console.log(
+  "🔥 ALL FEEDBACK COUNT:",
+  debugAllFeedback.length
+);
+
+console.log(
+  "🔥 ALL FEEDBACK:",
+  debugAllFeedback
+);
+
+const [items, total] =
+  await Promise.all([
+    Feedback.find(filter)
+      .populate(
+        "complaint",
+        "referenceId title status category"
+      )
+      .populate(
+        "submittedBy",
+        "name email rollNumber"
+      )
+      .sort({
+        createdAt: -1,
+      })
+      .skip(
+        (safePage - 1) *
+          safeLimit
+      )
+      .limit(safeLimit),
+
+    Feedback.countDocuments(filter),
+  ]);
     // --------------------------------------------------
     // ANALYTICS
     // --------------------------------------------------

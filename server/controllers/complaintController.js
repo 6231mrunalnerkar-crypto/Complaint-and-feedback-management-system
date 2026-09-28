@@ -285,6 +285,13 @@ async function getStats(req, res) {
 // ======================================================
 async function getStaffList(req, res) {
   try {
+    console.log("========== STAFF LIST USER ==========");
+    console.log("ID:", req.user?._id);
+    console.log("NAME:", req.user?.name);
+    console.log("EMAIL:", req.user?.email);
+    console.log("ROLE:", req.user?.role);
+    console.log("=====================================");
+
     const User = require("../models/User");
 
     const staff = await User.find({
@@ -307,7 +314,6 @@ async function getStaffList(req, res) {
     });
   }
 }
-
 // ======================================================
 // ASSIGN COMPLAINT
 // ======================================================
